@@ -1,0 +1,400 @@
+#SIM
+mydata.mydata_controller_display:
+  path: '/mydata'
+  defaults:
+    _controller: '\Drupal\mydata\Controller\MydataController::display'
+    _title: 'SIM'
+  requirements:
+    _role: 'administrator'
+  options:
+    no_cache: 'TRUE'
+
+#Display grid view table
+mydata.display_table_controller_display2:
+  path: '/mydata/oss/table2'
+  defaults:
+    _controller: '\Drupal\mydata\Controller\DisplayTableController2::display'
+  requirements:
+   _role: 'administrator+esim_cs+esim_admin+usim+usim_admin+usim_cs+esim_usim_cs+customer_integration+esim_readonly+sim_tech+tenant_management'
+  no_cache: 'TRUE'
+
+#Display grid view table new
+mydata.display_table_display:
+  path: '/mydata/oss/table'
+  defaults:
+    _form: '\Drupal\mydata\Form\DisplayTable'
+  requirements:
+    _role: 'administrator+esim_cs+esim_admin+usim+usim_admin+usim_cs+esim_usim_cs+customer_integration+esim_readonly+sim_tech+tenant_management'
+  options:
+    no_cache: 'TRUE'
+
+#preprod db
+mydata.display_table_display2:
+  path: '/mydata/oss/tables2'
+  defaults:
+    _form: '\Drupal\mydata\Form\DisplayTable_Preprod'
+  requirements:
+    _role: 'administrator+esim_cs+esim_admin+usim+usim_admin+usim_cs+esim_usim_cs+customer_integration+esim_readonly+sim_tech+tenant_management'
+  options:
+    no_cache: 'TRUE'
+
+#Edit link
+mydata.mydata_form2:
+  path: '/mydata/form/mydata2'
+  defaults:
+    _form: '\Drupal\mydata\Form\MydataForm2'
+  requirements:
+    _access: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+#Delete link
+mydata.delete_form2:
+  path: '/mydata/form/delete2/{cid}'
+  defaults:
+    _form: '\Drupal\mydata\Form\DeleteForm2'
+  requirements:
+    _access: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+# configuration added popup
+mydata.form:
+  path: '/admin/config/example_form2'
+  defaults:
+    _form: 'Drupal\mydata\Form\ExampleForm'
+    _title: 'Modal View'
+  requirements:
+    _permission: 'administer site configuration'
+
+mydata.open_modal_form:
+  path: '/admin/config/modal_form2'
+  defaults:
+    _controller: '\Drupal\mydata\Controller\ModalFormExampleController::openModalForm'
+    _title: 'eSIM Line View Info'
+  requirements:
+    _access: 'TRUE'
+
+mydata.open_stats_modal_form:
+  path: '/admin/config/stats'
+  defaults:
+    _controller: '\Drupal\mydata\Controller\ModalFormExampleController::statsModalForm'
+    _title: 'Stats'
+  requirements:
+    _access: 'TRUE'
+
+#esim line view for preprod button
+mydata.open__preprod_modal_form:
+  path: '/admin/config/preprod_modal_form2'
+  defaults:
+    _controller: '\Drupal\mydata\Controller\ModalFormPreprodController::openModalForm'
+    _title: 'Preprod eSIM Line View Info'
+  requirements:
+    _access: 'TRUE'
+
+#modal form partner for op
+mydata.open_modal_form_partner:
+  path: '/admin/config/modal_form_partner'
+  defaults:
+    _controller: '\Drupal\mydata\Controller\PartnerModalFormExampleController::openModalForm'
+    _title: 'Modal Partner'
+  requirements:
+    _access: 'TRUE'
+
+#upload input file    
+mydata.upload_input_file:
+  path: '/uploadinputfile'
+  defaults:
+    _form: '\Drupal\mydata\Form\UploadInputFile'
+    _title: 'Upload Input File'
+  requirements:
+   _role: 'administrator'
+  options:
+    no_cache: 'TRUE'
+
+#input_file  
+mydata.display_table_inputfile_controller:
+  path: '/input-file'
+  defaults:
+    _controller: '\Drupal\mydata\Controller\InputFileController::display'
+  requirements:
+    _role: 'administrator'
+  no_cache: 'TRUE'
+
+#input elements table input_file
+mydata.open_modal_input_file:
+  path: '/admin/config/modal_input_file'
+  defaults:
+    _controller: '\Drupal\mydata\Controller\InputElementsModalController::openModalForm'
+    _title: 'Modal Input File'
+  requirements:
+    _access: 'TRUE'
+
+#Esim File Details table input_file
+mydata.open_modal_esim_file_detail:
+  path: '/admin/config/modal_esim_file_detail'
+  defaults:
+    _controller: '\Drupal\mydata\Controller\EsimFileDetailModalController::openModalForm'
+    _title: 'Modal eSIM File Detail'
+  requirements:
+    _access: 'TRUE'
+
+#drupaluser add
+mydata.drupal_user_controller_display:
+  path: '/drupal-user'
+  defaults:
+    _controller: '\Drupal\mydata\Controller\DrupalUserController::display'
+    _title: 'Drupal User'
+  requirements:
+    _access: 'TRUE'
+  no_cache: 'TRUE'
+
+#drupaluser delete
+mydata.drupal_user_controller_delete_display:
+  path: '/drupal-user-delete'
+  defaults:
+    _controller: '\Drupal\mydata\Controller\DrupalUserDeleteController::display'
+    _title: 'Drupal User Delete'
+  requirements:
+    _access: 'TRUE'
+  no_cache: 'TRUE'
+
+#user billing entity id   
+mydata.user_billing_entity_id_display:
+  path: '/user-billing-entity-id'
+  defaults:
+    _form: '\Drupal\mydata\Form\UserBillingEntityId'
+    _title: 'Partner Assignment'
+  requirements:
+   _role: 'administrator'
+  no_cache: 'TRUE'
+
+#ESIM Generate
+mydata.esim_generate:
+  path: '/esim-generate'
+  defaults:
+    _form: '\Drupal\mydata\Form\EsimGenerate'
+    _title: 'Esim Generate'
+  requirements:
+   _role: 'administrator'
+  options:
+    no_cache: 'TRUE'
+
+#USIM Generate
+mydata.usim_generate:
+  path: '/usim-generate'
+  defaults:
+    _form: '\Drupal\mydata\Form\UsimGenerate'
+    _title: 'Usim Generate'
+  requirements:
+   _role: 'administrator'
+  options:
+    no_cache: 'TRUE'
+
+#provision search    
+mydata.provision_search:
+  path: '/provision-search'
+  defaults:
+    _form: '\Drupal\mydata\Form\ProvisionSearch'
+    _title: 'Provision Search'
+  requirements:
+   _role: 'administrator'
+  options:
+    no_cache: 'TRUE'
+
+#Esim 10T Status View
+mydata.esim_10T_status_view:
+  path: '/esim-10t-status-view'
+  defaults:
+    _form: '\Drupal\mydata\Form\Esim10TStatusView'
+    _title: 'eSIM 10t Status View'
+  requirements:
+   _role: 'administrator'
+  options:
+    no_cache: 'TRUE'
+    
+#Tech10TAPI    
+mydata.tech_api:
+  path: '/tech-api'
+  defaults:
+    _form: '\Drupal\mydata\Form\TechAPI'
+    _title: 'Tech API'
+  requirements:
+    _role: 'administrator+esim_admin+sim_tech'
+  options:
+    no_cache: 'TRUE'
+
+#sim line view
+mydata.sim_line_view:
+  path: '/sim-line-view'
+  defaults:
+    _form: '\Drupal\mydata\Form\SimLineView'
+  requirements:
+    _role: 'administrator+customer_integration'
+  options:
+    no_cache: 'TRUE'
+
+mydata.qr_form:
+  path: '/admin/config/qr_form'
+  defaults:
+    _controller: '\Drupal\mydata\Controller\ModalQRController::openModalForm'
+    _title: 'QR Form'
+  requirements:
+    _access: 'TRUE'
+
+mydata.preprod_qr_form:
+  path: '/admin/config/preprod_qr_form'
+  defaults:
+    _controller: '\Drupal\mydata\Controller\ModalPreprodQRController::openModalForm'
+    _title: 'Preprod QR Form'
+  requirements:
+    _access: 'TRUE'
+
+mydata.release_form:
+  path: '/admin/config/release_form'
+  defaults:
+    _controller: '\Drupal\mydata\Controller\ModalReleaseController::openModalForm'
+    _title: 'Release Form'
+  requirements:
+    _access: 'TRUE'
+
+mydata.reset_form:
+  path: '/admin/config/reset_form'
+  defaults:
+    _controller: '\Drupal\mydata\Controller\ModalResetController::openModalForm'
+    _title: 'Reset Form'
+  requirements:
+    _access: 'TRUE'
+
+mydata.preprod_reset_form:
+  path: '/admin/config/preprod_reset_form'
+  defaults:
+    _controller: '\Drupal\mydata\Controller\ModalPreprodResetController::openModalForm'
+    _title: 'Preprod Reset Form'
+  requirements:
+    _access: 'TRUE'
+
+mydata.preprod_release_form:
+  path: '/admin/config/preprod_release_form'
+  defaults:
+    _controller: '\Drupal\mydata\Controller\ModalPreprodReleaseController::openModalForm'
+    _title: 'Preprod Release Form'
+  requirements:
+    _access: 'TRUE'
+
+mydata.simlineview:
+  path: '/admin/config/simlineview'
+  defaults:
+    _controller: '\Drupal\mydata\Controller\SimlineviewModalController::openModalForm'
+    _title: 'Sim Line View'
+  requirements:
+    _access: 'TRUE'
+
+#create new user from existing db
+mydata.migrate_table_controller:
+  path: '/migrate-users'
+  defaults:
+    _controller: '\Drupal\mydata\Controller\MigrateTableController::display'
+    _title: 'Migrate Users'
+  requirements:
+    _role: 'administrator'
+  no_cache: 'TRUE'
+
+#remove user from txt file
+mydata.deleteuser:
+  path: '/remove-user'
+  defaults:
+    _controller: '\Drupal\mydata\Controller\RemoveUserController::display'
+    _title: 'Remove User'
+  requirements:
+    _role: 'administrator'
+  no_cache: 'TRUE'
+  
+#encryption url 
+mydata.mydata_encryption_form:
+  path: '/encryption-form'
+  defaults:
+    _form: '\Drupal\mydata\Form\EncryptionForm'
+    _title: 'Encryption Form'
+  requirements:
+   _role: 'administrator'
+  options:
+    no_cache: 'TRUE'
+
+#user management 
+mydata.user_group_membership_display:
+  path: '/user-mgmt'
+  defaults:
+    _form: '\Drupal\mydata\Form\UserMgmt'
+    _title: 'User Management'
+  requirements:
+   _role: 'administrator'
+  no_cache: 'TRUE'
+
+#download-usim 
+mydata.download:
+  path: '/download'
+  defaults:
+    _form: '\Drupal\mydata\Form\Download'
+    _title: 'Download'
+  requirements:
+   _role: 'authenticated'
+  no_cache: 'TRUE'
+
+#Order Request From
+mydata.order_request:
+  path: '/order-request'
+  defaults:
+    _form: '\Drupal\mydata\Form\OrderRequestForm'
+    _title: 'Order Request'
+  requirements:
+   _role: 'administrator+esim_admin+usim_admin'
+  options:
+    no_cache: 'TRUE'
+    
+#sim profile audit
+mydata.profiles_audit:
+  path: '/profiles-audit'
+  defaults:
+    _form: '\Drupal\mydata\Form\ProfilesAudit'
+    _title: 'Profiles Audit'
+  requirements:
+   _role: 'administrator+esim_admin+usim_admin'
+  options:
+    no_cache: 'TRUE'
+#EsimLineViewSync cron Controller
+mydata.esim_line_view_sync_controller:
+  path: '/esim-line-view-sync'
+  defaults:
+    _controller: '\Drupal\mydata\Controller\EsimLineViewSyncController::display'
+    _title: 'eSIM Line View Sync'
+  requirements:
+    _access: 'TRUE'
+  no_cache: 'TRUE'
+
+#Manual fileupload popup    
+mydata.open_modal_manual_fileupload_form:
+  path: '/manual_fileupload_form'
+  defaults:
+    _controller: '\Drupal\mydata\Controller\ManualFileUploadController::openModalForm'
+    _title: 'Manual File Upload Form'
+  requirements:
+    _role: 'administrator'
+
+#esim comment
+mydata.comment_form:
+  path: '/admin/config/comment_form'
+  defaults:
+    _controller: '\Drupal\mydata\Controller\ModalCommentController::openModalForm'
+    _title: 'ESIM Comment Form'
+  requirements:
+    _access: 'TRUE'
+
+#usim comment
+mydata.usim_comment_form:
+  path: '/admin/config/usim_comment_form'
+  defaults:
+    _controller: '\Drupal\mydata\Controller\UsimModalCommentController::openModalForm'
+    _title: 'USIM Comment Form'
+  requirements:
+    _access: 'TRUE'

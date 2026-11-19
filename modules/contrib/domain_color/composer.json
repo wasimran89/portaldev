@@ -1,0 +1,13 @@
+{
+    "name": "drupal/domain_color",
+    "type": "drupal-module",
+    "description": "Provides the core Color module with Domain Acces module support.",
+    "homepage": "http://drupal.org/project/domain_color",
+    "license": "GPL-2.0+",
+    "require": {
+        "php": ">=7.0.8",
+        "drupal/core": "^8.7.7 || ^9",
+        "drupal/domain": "^1.0-alpha16"
+    },
+    "minimum-stability": "dev"
+}

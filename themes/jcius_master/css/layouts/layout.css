@@ -1,0 +1,48 @@
+.view-pending-order table.cols-0 {
+    display: none;
+}
+.block.block-views.block-views-blockcompleted-orders-block-1{
+    padding: 20px;
+}
+.view-completed-order table.cols-0 {
+    display: none;
+}
+.block.block-views.block-views-blockwho-s-online-who-s-online-block {
+    border: 1px solid;
+    padding: 20px;
+   /* box-shadow: 4px 4px #00bceb;*/
+}
+
+.block.block-views.block-views-blockcompleted-orders-block-2 {
+    border: 1px solid;
+    padding: 20px;
+   /* box-shadow: 4px 4px #00bceb;*/
+    margin-left: 20px;
+}
+
+.block.block-views.block-views-blockpending-orders-block-1 {
+    border: 1px solid;
+    padding: 20px;
+   /*box-shadow: 4px 4px #00bceb;*/
+    margin-top: 20px;
+}
+
+.block.block-views.block-views-blocksubmited-orders-block-2 {
+    border: 1px solid;
+    padding: 20px;
+  /* box-shadow: 4px 4px #00bceb;*/
+    margin-top: 20px;
+}
+.block.block-views.block-views-blockwho-s-online-who-s-online-block table,.block.block-views.block-views-blocksubmited-orders-block-2 table,.block.block-views.block-views-blockpending-orders-block-1 table,.block.block-views.block-views-blockwho-s-online-who-s-online-block table {
+    display: none;
+}
+.block.block-layout-builder.block-inline-blockbasic {
+    border: 1px solid;
+    padding: 20px;
+  /* box-shadow: 4px 4px #00bceb;*/
+    margin-top: 20px;
+    margin-left: 20px;
+}
+#search-block-form input.form-submit {
+    background: url(/themes/contrib/graphics_zymphonies_theme/images/search.png?1554720536=) no-repeat center #00bceb;
+}

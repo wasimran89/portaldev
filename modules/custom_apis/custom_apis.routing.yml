@@ -1,0 +1,8 @@
+custom_apis.esimdata.nocache:
+  path: '/api/list'
+  defaults:
+    _plugin: 'esimdata'
+  requirements:
+    _access: 'TRUE'
+  options:
+    no_cache: TRUE

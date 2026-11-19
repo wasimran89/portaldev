@@ -1,0 +1,10 @@
+name: 'Site Branding Per Role'
+type: module
+description: 'Site branding configuation per role.'
+core_version_requirement: ^8 || ^9 || ^10
+package: 'Site Branding'
+
+# Information added by Drupal.org packaging script on 2022-11-16
+version: '1.0.2'
+project: 'site_branding_per_role'
+datestamp: 1668593923

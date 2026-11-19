@@ -1,0 +1,7 @@
+name: 'QR Activity Log'
+type: module
+description: 'Provides access to the QR Activity Log table in Drupal Views.'
+core_version_requirement: ^9 || ^10
+package: Custom
+dependencies:
+  - drupal:views

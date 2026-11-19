@@ -1,0 +1,24 @@
+{
+    "name": "drupal/commerce_fedex",
+    "type": "drupal-module",
+    "description": "Provides FedEx integration with Commerce Shipping.",
+    "keywords": [
+        "Drupal"
+    ],
+    "license": "GPL-2.0+",
+    "homepage": "https://www.drupal.org/project/commerce_fedex",
+    "support": {
+        "issues": "https://www.drupal.org/project/issues/commerce_fedex",
+        "source": "https://cgit.drupalcode.org/commerce_fedex"
+    },
+    "require": {
+        "php": ">=7.4",
+        "ext-soap": "*",
+        "drupal/commerce": "^2.32 || ^3",
+        "drupal/commerce_shipping": "~2",
+        "nicholascreativemedia/fedexphp": "^1.0.7"
+    },
+    "require-dev": {
+        "phpspec/prophecy-phpunit": "^2.0"
+    }
+}

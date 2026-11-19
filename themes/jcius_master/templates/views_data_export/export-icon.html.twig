@@ -1,0 +1,17 @@
+{#
+/**
+ * @file
+ * Default theme implementation for an export icon.
+ *
+ * Available variables:
+ * - url: An internal system path of the data export.
+ * - attributes: Remaining HTML attributes for the export link.
+ *   - format: The export format (csv, json, xml).
+ *   - class: HTML classes to be applied to the export link.
+ *
+ * @ingroup themeable
+ */
+#}
+<a href="https://{{ url|replace({'http://': ''}) }}"{{ attributes.addClass('add-new button button--primary js-form-submit form-submit') }}>
+  {{ 'Download @format'|t({'@format': format}) }}
+</a>

@@ -1,0 +1,4 @@
+last_visited_pages.user_tab:
+  route_name: last_visited_pages.user_tab
+  title: 'Last Visited Pages'
+  base_route: entity.user.canonical

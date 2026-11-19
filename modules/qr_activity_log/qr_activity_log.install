@@ -1,0 +1,41 @@
+<?php
+
+/**
+ * Implements hook_schema().
+ */
+function qr_activity_log_schema() {
+  $schema['qr_activity_log'] = [
+    'description' => 'Table to store QR activity logs.',
+    'fields' => [
+      'id' => [
+        'type' => 'serial',
+        'not null' => TRUE,
+        'description' => 'Primary Key: Unique log ID.',
+      ],
+      'iccid' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'description' => 'The ICCID associated with the activity.',
+      ],
+      'activity' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'description' => 'Description of the activity.',
+      ],
+      'uid' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'User ID of the activity initiator.',
+      ],
+      'timestamp' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'Timestamp of the activity.',
+      ],
+    ],
+    'primary key' => ['id'],
+  ];
+  return $schema;
+}

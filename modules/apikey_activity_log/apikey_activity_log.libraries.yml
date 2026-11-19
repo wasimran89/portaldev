@@ -1,0 +1,13 @@
+apikey_libraries:
+  css:
+    theme:
+      css/api_key_mask.css: {}
+  js:
+    js/api-key-toggle.js: {}
+  dependencies:
+   - core/jquery
+   - core/drupal.ajax
+   - core/drupal
+   - core/drupalSettings
+   - core/drupal.dialog
+   - core/jquery.once

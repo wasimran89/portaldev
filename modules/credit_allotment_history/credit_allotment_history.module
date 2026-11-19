@@ -1,0 +1,125 @@
+<?php
+
+use Drupal\group\Entity\Group;
+use Drupal\user\Entity\User;
+/**
+ * @file
+ * Provides Credit Allotment History module functionality.
+ */
+
+/**
+ * Implements hook_help().
+ */
+function credit_allotment_history_help($route_name, \Drupal\Core\Routing\RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.credit_allotment_history':
+      return '<p>' . t('The Credit Allotment History module provides a custom table for credit allotment hisotry and makes it available in Views.') . '</p>';
+  }
+}
+
+function credit_allotment_history_views_pre_view($view, $display_id, array &$args) {
+   $user_roles = \Drupal::currentUser()->getRoles();
+   if ($view->id() === 'credit_allotment_history' && $display_id === 'page_1') {
+    // Check if user has administrator role
+    if (in_array('administrator', $user_roles)) {
+      $view->removeHandler($display_id, 'argument', 'field_group_type_target_id');
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_insert().
+ */
+function credit_allotment_history_entity_insert(\Drupal\Core\Entity\EntityInterface $entity) {
+  if ($entity instanceof Group) {
+    $user = User::load(\Drupal::currentUser()->id());
+    $cgroup = $user->get('field_group_type')->getValue();
+    $cgroup_id = $cgroup[0]['target_id'] ?? NULL;
+
+    // Get old (original) and new values
+    $original = $entity->original;
+
+    $old_release = $original->get('field_credit_release')->value ?? null;
+    $new_release = $entity->get('field_credit_release')->value ?? null;
+
+    $old_reset = $original->get('field_credit_reset')->value ?? null;
+    $new_reset = $entity->get('field_credit_reset')->value ?? null;
+
+    $timestamp = \Drupal::time()->getCurrentTime();
+    $uid = $user->id();
+
+    if ($old_release != $new_release) {
+      \Drupal::database()->insert('credit_allotment_history')->fields([
+        'from_partner_id', 'to_partner_id', 'operation_type',
+        'credit_amount', 'remarks', 'uid', 'timestamp'
+      ])->values([
+        $cgroup_id, $entity->id(),
+        'eSIM release credit manually added',
+        $new_release, 'MANUAL RELEASE', $uid, $timestamp
+      ])->execute();
+    }
+
+    if ($old_reset != $new_reset) {
+      \Drupal::database()->insert('credit_allotment_history')->fields([
+        'from_partner_id', 'to_partner_id', 'operation_type',
+        'credit_amount', 'remarks', 'uid', 'timestamp'
+      ])->values([
+        $cgroup_id, $entity->id(),
+        'eSIM reset credit manually added',
+        $new_reset, 'MANUAL RESET', $uid, $timestamp
+      ])->execute();
+    }
+
+    \Drupal::logger('credit_allotment_history')->notice('Group updated: @label', ['@label' => $entity->label()]);
+  }
+}
+
+/**
+ * Implements hook_entity_update().
+ */
+function credit_allotment_history_entity_update(\Drupal\Core\Entity\EntityInterface $entity) {
+  if ($entity instanceof Group) {
+    $current_route = \Drupal::routeMatch()->getRouteName();
+    if ($current_route == 'entity.group.edit_form') {
+      $user = User::load(\Drupal::currentUser()->id());
+      $cgroup = $user->get('field_group_type')->getValue();
+      $cgroup_id = $cgroup[0]['target_id'] ?? NULL; 
+
+      // Get old (original) and new values
+      $original = $entity->original;
+
+      $old_release = $original->get('field_credit_release')->value ?? null;
+      $new_release = $entity->get('field_credit_release')->value ?? null;
+
+      $old_reset = $original->get('field_credit_reset')->value ?? null;
+      $new_reset = $entity->get('field_credit_reset')->value ?? null;
+
+      $timestamp = \Drupal::time()->getCurrentTime();
+      $uid = $user->id();
+
+      if ($old_release != $new_release) {
+        \Drupal::database()->insert('credit_allotment_history')->fields([
+          'from_partner_id', 'to_partner_id', 'operation_type',
+          'credit_amount', 'remarks', 'uid', 'timestamp'
+        ])->values([
+          $cgroup_id, $entity->id(),
+          'eSIM release credit manually edited from '.$old_release.' to ' .$new_release,
+          $new_release, 'MANUAL RELEASE', $uid, $timestamp
+        ])->execute();
+      }
+
+      if ($old_reset != $new_reset) {
+        \Drupal::database()->insert('credit_allotment_history')->fields([
+          'from_partner_id', 'to_partner_id', 'operation_type',
+          'credit_amount', 'remarks', 'uid', 'timestamp'
+        ])->values([
+          $cgroup_id, $entity->id(),
+          'eSIM reset credit manually edited from '.$old_reset.' to ' .$new_reset,
+          $new_reset, 'MANUAL RESET', $uid, $timestamp
+        ])->execute();
+      }
+
+      \Drupal::logger('credit_allotment_history')->notice('Group updated: @label', ['@label' => $entity->label()]);
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{#
+/**
+ * @file
+ * Theme override for a 'form' element.
+ *
+ * Available variables
+ * - attributes: A list of HTML attributes for the wrapper element.
+ * - children: The child elements of the form.
+ *
+ * @see template_preprocess_form()
+ */
+#}
+<form{{ attributes }}>
+  {{ children }}
+ <li style="display:none" class="custom-register"><span class="usr-reg"><a href="/user/register" data-drupal-link-system-path="user/register">{{ 'Create new account'|t}}</a></span><span class="usr-reset"><a href="/user/password" data-drupal-link-system-path="user/password">{{'Reset Password?'|t}}</a></span></li>
+</form>

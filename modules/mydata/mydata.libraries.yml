@@ -1,0 +1,11 @@
+mydata_libraries:
+  js:
+    js/mydata.js: {}
+    js/chart.min.js: {}
+  dependencies:
+   - core/jquery
+   - core/drupal.ajax
+   - core/drupal
+   - core/drupalSettings
+   - core/drupal.dialog
+   - core/jquery.once

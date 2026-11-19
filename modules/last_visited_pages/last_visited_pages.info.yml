@@ -1,0 +1,11 @@
+name: 'Last Visited Pages'
+type: module
+description: 'A module to show last visited pages you visited on the site in a block.'
+core: 8.x
+package: Last Visited Pages
+core_version_requirement: ^8 || ^9
+configure : last_visited_pages.settings
+dependencies:
+  - drupal:block
+
+

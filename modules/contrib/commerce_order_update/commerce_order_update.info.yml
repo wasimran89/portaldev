@@ -1,0 +1,13 @@
+name: 'Commerce Order Status Update'
+type: module
+description: 'Provides ability to update commerce order(s) status via views bulk operations.'
+core_version_requirement: ^9.2 || ^10
+package: Commerce
+dependencies:
+  - commerce_order_label:commerce_order_label
+  - views_bulk_operations:views_bulk_operations
+
+# Information added by Drupal.org packaging script on 2022-04-15
+version: '8.x-2.0'
+project: 'commerce_order_update'
+datestamp: 1650027049

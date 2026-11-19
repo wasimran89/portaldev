@@ -1,0 +1,6 @@
+services:
+  jcius_cron.commands:
+    class: \Drupal\jcius_cron\Commands\JciusCronCommands
+    arguments: ['@entity_type.manager', '@database', '@cache.default']
+    tags:
+      - { name: drush.command }

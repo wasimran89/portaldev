@@ -1,0 +1,60 @@
+<?php
+
+/**
+ * Implements hook_schema().
+ */
+/**
+ * Implements hook_schema().
+ */
+function apikey_activity_log_schema() {
+  $schema['apikey_activity_log'] = [
+    'description' => 'Logs API key copy and generation activities.',
+    'fields' => [
+      'id' => [
+        'type' => 'serial',
+        'not null' => TRUE,
+        'description' => 'Primary key: Unique log ID.',
+      ],
+      'uid' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'User ID who performed the activity.',
+      ],
+      'group_name' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'description' => 'Group name associated with the API key.',
+      ],
+      'api_key_value' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'description' => 'The API key value.',
+      ],
+      'activity' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'description' => 'Action performed, e.g., Copied or Generated.',
+      ],
+      'created_at' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'Timestamp of the activity.',
+      ],
+    ],
+
+    'primary key' => ['id'],
+
+    'indexes' => [
+      'idx_uid' => ['uid'],
+      'idx_copied_at' => ['created_at'],
+      'idx_group_name' => ['group_name'],
+    ],
+  ];
+
+  return $schema;
+}

@@ -1,0 +1,14 @@
+api_key_activity_log.api_key_activity_log_page:
+  path: '/api-key-activity-log'
+  requirements:
+    _role: 'administrator'
+
+api_key_activity_log.api_key:
+  path: '/api-key'
+  defaults:
+    _form: '\Drupal\apikey_activity_log\Form\ApikeyForm'
+    _title: 'API Key'
+  requirements:
+   _role: 'administrator + tenant_management'
+  options:
+    no_cache: 'TRUE'

@@ -1,0 +1,4 @@
+usage_10t.usage_10t_page:
+  path: '/10t-usage-log'
+  requirements:
+    _permission: 'administer site configuration'

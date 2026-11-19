@@ -1,0 +1,23 @@
+<?php
+
+/**
+ * @file
+ * Provides Usage 10t module functionality.
+ */
+
+/**
+ * Implements hook_help().
+ */
+function usage_10t_help($route_name, \Drupal\Core\Routing\RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.usage_10t':
+      return '<p>' . t('The 10T Usage module provides a custom table for logging 10T activities and makes it available in Views.') . '</p>';
+  }
+}
+
+/**
+ * Implements hook_uninstall()
+ */
+function usage_10t_uninstall() {
+  \Drupal::database()->schema()->dropTable('10t_usage');
+}

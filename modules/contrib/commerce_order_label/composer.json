@@ -1,0 +1,11 @@
+{
+    "name": "drupal/commerce_order_label",
+    "type": "drupal-module",
+    "description": "Resolves empty labels on commerce order entities.",
+    "homepage": "https://drupal.org/project/commerce_order_label",
+    "license": "GPL-2.0+",
+    "require": {
+        "drupal/core": "^9.2 || ^10"
+    },
+    "minimum-stability": "dev"
+}

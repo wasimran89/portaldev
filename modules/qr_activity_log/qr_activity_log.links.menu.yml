@@ -1,0 +1,6 @@
+qr_activity_log.admin:
+  title: 'QR Activity Log'
+  route_name: qr_activity_log.qr_activity_log_page
+  description: 'View the QR activity log.'
+  parent: system.admin_reports
+  weight: 10

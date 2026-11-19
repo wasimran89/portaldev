@@ -1,0 +1,14 @@
+ partner_id |                             partner_name                             | allocated | available | deleted | enabled | error | installed | released | total 
+------------+----------------------------------------------------------------------+-----------+-----------+---------+---------+-------+-----------+----------+-------
+         16 | 10T                                                                  |         0 |         0 |       0 |       0 |     0 |         0 |        1 |     1
+          4 | Artemis/Rearden                                                      |         0 |         0 |       4 |       0 |     0 |        10 |      140 |   154
+         11 | AssuredTek                                                           |         0 |         0 |      14 |       5 |     0 |         9 |      262 |   290
+         21 | Blue Arcus Technologies                                              |         0 |         0 |      62 |     129 |     0 |        90 |      268 |   550
+         44 | Federated States of Micronesia Telecommunication Corporation (FSMTC) |         0 |         0 |       9 |      45 |     0 |        19 |      928 |  1001
+         20 | GXC                                                                  |         0 |       116 |      56 |      45 |     0 |        39 |      214 |   470
+         27 | JCI Tokyo                                                            |         0 |         2 |       0 |       0 |     0 |         0 |        0 |     2
+         29 | JCI US                                                               |         2 |        20 |       2 |      18 |     0 |         3 |       36 |    84
+         62 | JCI US Test Child                                                    |         0 |         0 |       0 |       0 |     0 |         0 |        2 |     3
+         61 | JCI US Test Partner                                                  |         0 |         0 |       0 |       0 |     0 |         0 |        2 |     2
+(10 rows)
+

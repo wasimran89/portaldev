@@ -1,0 +1,16 @@
+user_credit_tabs.credit:
+  path: '/user/{user}/credit'
+  defaults:
+    _controller: '\Drupal\user_credit_tabs\Controller\UserCreditTabsController::view'
+    _title: 'User Credits'
+  requirements:
+    _permission: 'access content'
+    user: \d+
+  no_cache: 'TRUE'
+user_credit_tabs.credit_allotment:
+  path: '/credit-allotment'
+  defaults:
+    _form: '\Drupal\user_credit_tabs\Form\CreditAllotment'
+  requirements:
+   _role: 'authenticated'
+  no_cache: 'TRUE'

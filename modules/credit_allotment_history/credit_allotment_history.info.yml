@@ -1,0 +1,7 @@
+name: 'Credit Allotment History'
+type: module
+description: 'Provides access to the Credit Allotment History table in Drupal Views.'
+core_version_requirement: ^9 || ^10 || ^11
+package: Custom
+dependencies:
+  - drupal:views

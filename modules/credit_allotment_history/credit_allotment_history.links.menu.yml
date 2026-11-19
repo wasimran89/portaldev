@@ -1,0 +1,6 @@
+credit_allotment_history.admin:
+  title: 'Credit Allotment History'
+  route_name: credit_allotment_history.credit_allotment_history_page
+  description: 'View the Credit Allotment History.'
+  parent: system.admin_reports
+  weight: 11

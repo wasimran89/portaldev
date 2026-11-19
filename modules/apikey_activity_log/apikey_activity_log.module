@@ -1,0 +1,206 @@
+<?php
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
+use Drupal\user\Entity\User;
+use Drupal\Core\Database\Database;
+/**
+ * @file
+ * Provides API Key Activity Log module functionality.
+ */
+
+/**
+ * Implements hook_help().
+ */
+function api_key_activity_log_help($route_name, \Drupal\Core\Routing\RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.api_key_activity_log':
+      return '<p>' . t('The API Key Activity Log module provides a custom table for logging API code-related activities and makes it available in Views.') . '</p>';
+  }
+}
+
+/**
+ * Generate API Key submit handler.
+ */
+function jcius_generate_api_key_submit(array &$form, FormStateInterface $form_state) {
+
+  $connection = \Drupal::database();
+
+  // Keep generating until we find a unique key.
+  do {
+    $key = substr(str_shuffle('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'), 0, 32);
+
+    // Query reference table to check if key exists
+    $query = $connection->select('group__field_api_key', 'k');
+    $query->fields('k', ['field_api_key_value']);
+    $query->condition('k.field_api_key_value', $key);
+    $exists = $query->execute()->fetchField();
+
+  } while ($exists);   // If key exists → generate again
+
+  // Update form_state
+  $form_state->setValue(['field_api_key', 0, 'value'], $key);
+
+  // Update form render array (AJAX)
+  $form['field_api_key']['widget'][0]['value']['#value'] = $key;
+
+   \Drupal::database()->insert('apikey_activity_log')
+      ->fields([
+        'uid' => \Drupal::currentUser()->id(),
+        'group_name' => $form['label']['widget'][0]['value']['#value'],
+        'api_key_value' => $key,
+        'activity' => "Generate API Key ",
+        'created_at' => \Drupal::time()->getRequestTime(),
+      ])
+      ->execute();
+}
+
+
+
+/**
+ * AJAX callback to refresh the api key field.
+ */
+function jcius_generate_api_key_ajax(array &$form, FormStateInterface $form_state) {
+  return $form['field_api_key'];
+}
+
+function apikey_activity_log_api_key_unique_validate(array &$form, FormStateInterface $form_state) {
+  // Get submitted field value
+  $key = $form_state->getValue(['field_api_key', 0, 'value']);
+
+  if (empty($key)) {
+    return; // nothing to validate
+  }
+
+  $connection = \Drupal::database();
+
+  // Query to check whether key already exists
+  $query = $connection->select('group__field_api_key', 'k');
+  $query->fields('k', ['entity_id']);
+  $query->condition('k.field_api_key_value', $key);
+
+  // Exclude the current group (when editing existing group)
+  $current_gid = $form_state->getValue('gid');
+  if (!empty($current_gid)) {
+    $query->condition('k.entity_id', $current_gid, '<>');
+  }
+
+  $exists = $query->execute()->fetchField();
+
+  if ($exists) {
+    // This triggers form validation error
+    $form_state->setErrorByName('field_api_key', t('The API Key already exists. Please enter a different value.'));
+  }
+}
+
+/**
+ * Implementation Hook_form_alter
+ *
+ */
+function apikey_activity_log_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+  if ($form_id === 'group_tamu_edit_form') {
+     // Wrap the field so AJAX can replace it.
+     $form['field_api_key']['#prefix'] = '<div id="api-key-field">';
+     $form['field_api_key']['#suffix'] = '</div>';
+
+     $api_key = $form_state->getFormObject()
+                        ->getEntity()
+                        ->get('field_api_key')
+                        ->value;
+
+     // Add AJAX Generate API Key button
+     $form['field_api_key']['widget'][0]['generate_api_key'] = [
+       '#type' => 'submit',
+       '#value' => t('Generate API Key'),
+       '#submit' => ['jcius_generate_api_key_submit'],
+       '#limit_validation_errors' => [],
+       '#ajax' => [
+         'callback' => 'jcius_generate_api_key_ajax',
+         'wrapper' => 'api-key-field',
+       ],
+     ];
+
+      $form['field_api_key']['widget'][0]['toggle_api_key'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'button',
+        '#value' => t('Show Key'),
+        '#attributes' => [
+          'type' => 'button',
+          'id' => 'api-key-toggle',
+          'class' => ['api-key-toggle-btn', 'button'],
+          'disabled' => $api_key ? NULL : 'disabled',
+        ],
+      ];
+
+      $form['field_api_key']['widget'][0]['copy_api_key'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'button',
+        '#value' => t('Copy Key'),
+        '#attributes' => [
+          'type' => 'button',
+          'id' => 'api-key-copy',
+          'class' => ['api-key-copy-btn', 'button'],
+          'disabled' => $api_key ? NULL : 'disabled',
+        ],
+      ];
+
+
+     $form['field_api_key']['widget'][0]['value']['#attributes']['class'][] = 'api-key-mask';
+     $form['field_api_key']['widget'][0]['value']['#attributes']['readonly'] = 'readonly';
+     $form['#attached']['library'][] = 'apikey_activity_log/apikey_libraries';
+
+     $form['#validate'][] = 'apikey_activity_log_api_key_unique_validate';
+   }
+
+   if ($form_id === 'group_tamu_add_form') {
+     // Wrap the field so AJAX can replace it.
+     $form['field_api_key']['#prefix'] = '<div id="api-key-field">';
+     $form['field_api_key']['#suffix'] = '</div>';
+
+     // Add AJAX Generate API Key button
+     $form['field_api_key']['widget'][0]['generate_api_key'] = [
+       '#type' => 'submit',
+       '#value' => t('Generate API Key'),
+       '#submit' => ['jcius_generate_api_key_submit'],
+       '#limit_validation_errors' => [],
+       '#ajax' => [
+         'callback' => 'jcius_generate_api_key_ajax',
+         'wrapper' => 'api-key-field',
+       ],
+     ];
+
+      $form['field_api_key']['widget'][0]['toggle_api_key'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'button',
+        '#value' => t('Show Key'),
+        '#attributes' => [
+          'type' => 'button',
+          'id' => 'api-key-toggle',
+          'class' => ['api-key-toggle-btn', 'button'],
+        ],
+      ];
+
+      $form['field_api_key']['widget'][0]['copy_api_key'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'button',
+        '#value' => t('Copy Key'),
+        '#attributes' => [
+          'type' => 'button',
+          'id' => 'api-key-copy',
+          'class' => ['api-key-copy-btn', 'button'],
+        ],
+      ];
+
+
+     $form['field_api_key']['widget'][0]['value']['#attributes']['class'][] = 'api-key-mask';
+     $form['field_api_key']['widget'][0]['value']['#attributes']['readonly'] = 'readonly';
+     $form['#attached']['library'][] = 'apikey_activity_log/apikey_libraries';
+
+     $form['#validate'][] = 'apikey_activity_log_api_key_unique_validate';
+   }
+
+   if ($form_id === 'api_key_form') {
+    $form['api_key_wrapper']['field_api_key']['#attributes']['class'][] = 'api-key-mask';
+    $form['#attached']['library'][] = 'apikey_activity_log/apikey_libraries';
+   }
+}

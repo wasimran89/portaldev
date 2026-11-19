@@ -1,0 +1,6 @@
+name: Jcius Drush Cron
+description: Lineview data sync from Lineview table to sim line detail view
+core: 8.x
+core_version_requirement: ^8 || ^9
+type: module
+package: Cron

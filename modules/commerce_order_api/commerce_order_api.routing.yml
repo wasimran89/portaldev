@@ -1,0 +1,8 @@
+commerce_order_api.place_order:
+  path: '/api/place-order'
+  defaults:
+    _controller: 'Drupal\commerce_order_api\Controller\OrderApiController::placeOrder'
+    _title: 'Place Order API'
+  requirements:
+    _permission: 'create commerce order'
+  methods: ['POST']

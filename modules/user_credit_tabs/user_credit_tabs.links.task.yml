@@ -1,0 +1,5 @@
+user_credit_tabs.credit:
+  route_name: user_credit_tabs.credit
+  title: 'Credits'
+  base_route: entity.user.canonical
+

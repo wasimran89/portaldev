@@ -1,0 +1,108 @@
+<?php
+
+/**
+ * @file
+ * Contains mydata.module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Mail\MailManagerInterface; //mail
+use Drupal\Component\Utility\SafeMarkup;
+use Drupal\Component\Utility\Html;
+use Drupal\Core\Form\FormStateInterface; //additional email
+/**
+ * Implements hook_help().
+ */
+function mydata_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the mydata module.
+    case 'help.page.mydata':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('This dispaly information what you enter your application.') . '</p>';
+      return $output;
+
+    default:
+  }
+}
+
+function mydata_page_attachments(array &$attachments) {
+  // Unconditionally attach the mydata/mydata_libraries.
+  $attachments['#attached']['library'][] = 'mydata/mydata_libraries';
+}
+
+function mydata_theme() {
+  // We use a template file to allow for translation of blocks of content.
+  // Therefore we need to add this content at the theming layer.
+  return [
+    'mydata_description' => [
+      'template' => 'description',
+      'variables' => [],
+    ],
+  ];
+}
+/**
+ * Implements hook_mail_alter()
+ * @param string $message
+ */
+function mydata_mail_alter(&$message) {
+    $headers = array(
+        'MIME-Version' => '1.0',
+        'Content-Type' => 'text/html; charset=iso-8859-1; format=flowed',
+        'Content-Transfer-Encoding' => '8Bit',
+        'X-Mailer' => 'Drupal',
+    );
+    foreach ($headers as $key => $value) {
+        $message['headers'][$key] = $value;
+    }
+}
+
+//mail
+/**
+ * Implements hook_mail()
+ * @param string $key
+ * @param string $message
+ * @param unknown_type $params
+ */
+function mydata_mail($key, &$message, $params) {
+ $options = array(
+   'langcode' => $message['langcode'],
+ );
+ switch ($key) {
+   case 'general_mail':
+     $message['from'] = \Drupal::config('system.site')->get('mail');
+     $message['subject'] = t('Notification: @subject', ['@subject' => $params['subject']], $options);
+     $message['body'][] = $params['message'];
+     if (isset($params['headers']) && is_array($params['headers'])) {
+                $message['headers'] += $params['headers'];
+            }
+     break;
+ }
+}
+
+/**
+ * Implements hook_page_attachments_alter().
+ */
+function mydata_page_attachments_alter(array &$attachments) {
+  //$route_name = \Drupal::routeMatch()->getRouteName();
+  // Check if you are on the CMS page you want to disable caching for.
+  if (\Drupal::routeMatch()->getRouteName() == 'entity.node.canonical') {
+    // Disable caching for this page.
+    $attachments['#cache']['max-age'] = 0;
+  }
+}
+function mydata_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) { 
+   //email validation override for multiple email address add
+   if($form_id == 'user_admin_settings')
+   {
+    $site_config = \Drupal::config('system.site');
+    // Default notifications address.
+    $form['mail_notification_address'] = [
+      '#type' => 'textfield',
+      '#title' => t('Notification email address'),
+      '#default_value' => $site_config->get('mail_notification'),
+      '#description' => t("The email address to be used as the 'from' address for all account notifications listed below. If <em>'Visitors, but administrator approval is required'</em> is selected above, a notification email will also be sent to this address for any new registrations. Leave empty to use the default system email address <em>(%site-email).</em>", ['%site-email' => $site_config->get('mail')]),
+      '#maxlength' => 180,
+    ];
+   }
+}

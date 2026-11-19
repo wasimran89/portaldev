@@ -1,0 +1,7 @@
+name: '10T Usage'
+type: module
+description: 'Provides access to the 10T Usage Log table in Drupal Views.'
+core_version_requirement: ^9 || ^10
+package: Custom
+dependencies:
+  - drupal:views

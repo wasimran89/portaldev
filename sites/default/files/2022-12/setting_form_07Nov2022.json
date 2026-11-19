@@ -1,0 +1,1513 @@
+{	
+	"address": {
+		"primary_key": "address_id",
+		"table_listing_fields": [
+		"address_id",
+		"line1",
+		"line2",
+		"line3",
+		"line4",
+		"city",
+		"state_code",
+		"postal_code",
+		"Edit",
+		"Delete"
+		],
+		"access_role":[
+		"esim",
+		"usim",
+		"oss"
+		]
+	},
+	"attribute": {
+		"primary_key": "attribute",
+		"table_listing_fields": [
+		"attribute",
+		"attribute_type",
+		"description"
+		],
+		"access_role":[
+		"billing_entity",
+		"oss"
+		]
+	},
+	"attribute_type": {
+		"primary_key": "attribute_type",
+		"table_listing_fields": [
+		"attribute_type",
+		"description"
+		],
+		"access_role":[
+		"billing_entity",
+		"oss"
+		]
+	},
+	"auditlog_id": {
+		"primary_key": "auditlog_id",
+		"table_listing_fields": [
+		"auditlog_id",
+		"change_timestamp",
+		"table_name",
+		"primary_key",
+		"user_name",
+		"query",
+		"change_type",
+		"original_data",
+		"new_data",
+		"schema_name"
+		]
+	},
+	"auditlog": {
+		"primary_key": "auditlog_id",
+		"table_listing_fields": [
+		"billing_entity_id",
+		"parent_billing_entity_id",
+		"opt_in_flag",
+		"gp_customer_id",
+		"phone_number2",
+		"fax_number1",
+		"fax_number2",
+		"url",
+		"preferred_timezone",
+		"billing_entity_type",
+		"alert_email2",
+		"alert_email1",
+		"name",
+		"phone_number1"
+		]
+	},
+	"billing_entity_address": {
+		"primary_key": "billing_entity_id",
+		"table_listing_fields": [
+		"billing_entity_id",
+		"address_id",
+		"address_type"
+		]
+	},
+	"carrier": {
+		"primary_key": "carrier",
+		"table_listing_fields": [
+		"carrier",
+		"domain",
+		"name",
+		"cdr_description",
+		"equipment_identifier_type",
+		"Edit",
+		"Delete"
+		],
+		"access_role":[
+		"billing_entity",
+		"oss"
+		]
+	},
+	"config": {
+		"primary_key": "billing_entity_id",
+		"table_listing_fields": [
+		"billing_entity_id",
+		"id",
+		"created_date",
+		"default_status",
+		"name",
+		"description",
+		"file_path",
+		"Edit",
+		"Delete"
+		],
+		"access_role":[
+		"usim",
+		"oss"
+		]
+	},
+	"config_equipment": {
+		"primary_key": "id",
+		"table_listing_fields": [
+		"id",
+		"config_id",
+		"equipment_model_id"
+		],
+		"access_role":[
+		"usim",
+		"oss"
+		]
+	},
+	"equipment": {
+		"primary_key": "equipment_id",
+		"table_listing_fields": [
+		"equipment_id",
+		"equipment_model_id",
+		"enabled_flag",
+		"equipment_config_id",
+		"equipment_firmware_id",
+		"equipment_type"
+		]
+	},
+	"equipment_identifier": {
+		"primary_key": "equipment_id",
+		"table_listing_fields": [
+		"equipment_id",
+		"date_created",
+		"date_modified",
+		"equipment_identifier_type",
+		"value",
+		"notes",
+		"Edit",
+		"Delete"
+		]
+	},
+	"equipment_identifier_type": {
+		"primary_key": "equipment_identifier_type",
+		"table_listing_fields": [
+		"equipment_identifier_type",
+		"description",
+		"unique_flag",
+		"change_eligible_flag",
+		"Edit",
+		"Delete"
+		]
+	},
+	"equipment_model": {
+		"primary_key": "equipment_model_id",
+		"table_listing_fields": [
+		"equipment_model_id",
+		"web_port",
+		"model_number2",
+		"model_note",
+		"model_description",
+		"part_number",
+		"make",
+		"vendor",
+		"provider_or_carrier",
+		"carrier",
+		"web_protocol",
+		"model_number1"
+		],
+		"access_role":[
+		"usim",
+		"oss"
+		]
+	},
+	"equipment_type": {
+		"primary_key": "equipment_type",
+		"table_listing_fields": [
+		"show_usage",
+		"equipment_type",
+		"description",
+		"equipment_class",
+		"preferred_identifier_type"
+		]
+	},
+	"equipment_warranty": {
+		"primary_key": "equipment_id",
+		"table_listing_fields": [
+		"equipment_id",
+		"warranty_start_date",
+		"warranty_end_date"
+		]
+	},
+	"equipment_warranty_rule": {
+		"primary_key": "equipment_model_id",
+		"table_listing_fields": [
+		"equipment_model_id",
+		"num_of_months"
+		]
+	},
+	"etl_equp_temp": {
+		"primary_key": "equipment_id",
+		"table_listing_fields": [
+		"equipment_id"
+		]
+	},
+	"firmware": {
+		"primary_key": "id",
+		"table_listing_fields": [
+		"id",
+		"billing_entity_id",
+		"create_date",
+		"default_status",
+		"device_version",
+		"name",
+		"description",
+		"file_path",
+		"Edit",
+		"Delete"
+		],
+		"access_role":[
+		"usim",
+		"oss"
+		]
+	},
+	"firmware_equipment": {
+		"primary_key": "id",
+		"table_listing_fields": [
+		"id",
+		"firmware_id",
+		"equipment_model_id",
+		"Edit",
+		"Delete"
+		],
+		"access_role":[
+		"usim",
+		"oss"
+		]
+	},
+	"fiserv_deploy": {
+		"primary_key": "line_id",
+		"table_listing_fields": [
+		"line_id",
+		"serial_number",
+		"sales_order_number",
+		"po_number",
+		"po_customer",
+		"po_term",
+		"plan_start_date",
+		"plan_end_date",
+		"term_price",
+		"deployment_po",
+		"deployment_customer",
+		"deployment_term",
+		"reassigned"
+		]
+	},
+	"groupname": {
+		"primary_key": "groupname",
+		"table_listing_fields": [
+		"groupname",
+		"priority",
+		"short_desc",
+		"long_desc",
+		"start_date",
+		"end_date",	
+		"Edit",
+		"Delete"
+		],
+		"access_role":[
+		"esim",
+		"usim",
+		"oss"
+		]
+	},
+	"groupname_default": {
+		"primary_key": "groupname",
+		"table_listing_fields": [
+		"groupname_default_key_id",
+		"billing_entity_id",
+		"groupname",
+		"carrier",
+		"Edit",
+		"Delete"
+		]
+	},
+	"gv_cdr": {
+		"primary_key": "id",
+		"table_listing_fields": [
+		"id",
+		"opening_time",
+		"tx_dropped_octets",
+		"rx_dropped_octets",
+		"tx_dropped_packets",
+		"rx_dropped_packets",
+		"tx_total_octets",
+		"rx_total_octets",
+		"tx_total_packets",
+		"rx_total_packets",
+		"tx_total_dropped_octets",
+		"rx_total_dropped_octets",
+		"tx_total_dropped_packets",
+		"rx_total_dropped_packets",
+		"tx_peak_octets",
+		"rx_peak_octets",
+		"peak_data_sampling_period",
+		"start_time",
+		"end_time",
+		"final",
+		"tx_octets",
+		"rx_octets",
+		"tx_packets",
+		"rx_packets",
+		"sub_ref_1",
+		"sub_ref_2",
+		"sub_ref_3",
+		"sub_ref_4",
+		"sub_ref_5",
+		"sub_ref_6",
+		"sub_ref_7",
+		"sub_ref_8",
+		"subsystem_type",
+		"subsystem_id",
+		"session_ref",
+		"bearer_ref",
+		"ip_addr",
+		"ipv6_addr",
+		"app_data_1"
+		]
+	},
+	"gv_cdr_usage_day": {
+		"primary_key": "imsi",
+		"table_listing_fields": [
+		"usage_date",
+		"row_count",
+		"tx_total_octets",
+		"rx_total_octets",
+		"imsi"
+		]
+	},
+	"gv_conn_data": {
+		"primary_key": "id",
+		"table_listing_fields": [
+		"id",
+		"creation_date",
+		"bearer_id",
+		"uplink_flow_id",
+		"downlink_flow_id",
+		"pcc_rule_id",
+		"mbr_dl",
+		"mbr_ul",
+		"qci",
+		"oper_state",
+		"pgw_node_id",
+		"pdn_id",
+		"imsi",
+		"local_cp_ipv4",
+		"local_cp_teid",
+		"local_cp_if_type",
+		"ue_ipv4",
+		"ue_ipv6_prefix",
+		"rat_type",
+		"serving_network",
+		"ecgi_plmnid",
+		"ecgi_cell_id",
+		"tai_plmnid",
+		"tai_tac",
+		"msisdn",
+		"apn_restriction",
+		"pcef_session_ref",
+		"primary_dns",
+		"secondary_dns",
+		"ambr_dl",
+		"ambr_ul",
+		"remote_cp_ipv4",
+		"remote_cp_teid",
+		"apn_oi",
+		"source_epc"
+		]
+	},
+	"inhand_cellsignal": {
+		"primary_key": "inhand_cellsignal_id",
+		"table_listing_fields": [
+		"inhand_cellsignal_id",
+		"timestamp_utc",
+		"password",
+		"hostname",
+		"serialnum",
+		"wan1_get_ip",
+		"wan1_sigrssi",
+		"wan2_get_ip",
+		"wan2_sigrssi",
+		"mqtt_atm_id",
+		"mnc",
+		"mcc",
+		"cell_id",
+		"lac",
+		"uptime",
+		"current_firmware_version",
+		"username"
+		]
+	},
+	"inhand_log": {
+		"primary_key": "inhand_log_id",
+		"table_listing_fields": [
+		"inhand_log_id",
+		"created_ts",
+		"equipment_id",
+		"hd_serials_number",
+		"hard_version",
+		"software_version_tail",
+		"online_modem_name",
+		"tmp_time",
+		"net_status",
+		"nettype",
+		"signal_status",
+		"ip",
+		"dns",
+		"sim_status",
+		"cardflag",
+		"imsi",
+		"iccid",
+		"lac_num",
+		"cell_id_num",
+		"rsrp",
+		"sinr"
+		]
+	},
+	"last_auditlog": {
+		"primary_key": "last_auditlog_id",
+		"table_listing_fields": [
+		"last_auditlog_id"
+		]
+	},
+	"line": {
+		"primary_key": "line_id",
+		"table_listing_fields": [
+		"multi_service",
+		"active_flag",
+		"start_date",
+		"end_date",
+		"date_created",
+		"current_plan_id",
+		"exclude_alert",
+		"line_id",
+		"billing_entity_id",
+		"billing_entity_address_id",
+		"calling_station_id",
+		"line_assignment_type",
+		"customer_po",
+		"sales_order",
+		"radius_username",
+		"line_label",
+		"gv_username"
+		],
+		"access_role":[
+		"esim",
+		"usim",
+		"oss"
+		]
+	},
+	"line_assignment_type": {
+		"primary_key": "line_assignment_type",
+		"table_listing_fields": [
+		"line_assignment_type",
+		"description"
+		]
+	},
+	"line_deploy": {
+		"primary_key": "line_id",
+		"table_listing_fields": [
+		"deployed",
+		"plan_experiation_date",
+		"term_price",
+		"deploy_po_term",
+		"reassigned",
+		"line_id",
+		"purchase_po_term",
+		"plan_initiation_date",
+		"sales_order_number",
+		"purchase_po",
+		"purchase_po_customer",
+		"deploy_po",
+		"deploy_po_customer",
+		"Edit",
+		"Delete"
+		]
+	},
+	"line_deploy_history": {
+		"primary_key": "line_id",
+		"table_listing_fields": [
+		"deployed",
+		"plan_experiation_date",
+		"term_price",
+		"deploy_po_term",
+		"reassigned",
+		"line_id",
+		"purchase_po_term",
+		"plan_initiation_date",
+		"sales_order_number",
+		"purchase_po",
+		"purchase_po_customer",
+		"deploy_po",
+		"deploy_po_customer"
+		]
+	},
+	"line_equipment": {
+		"primary_key": "line_id",
+		"table_listing_fields": [
+		"line_id",
+		"equipment_id",
+		"start_date",
+		"end_date",
+		"billing_entity_address_id",
+		"ship_date",
+		"install_date",
+		"installed_by"
+		]
+	},
+	"line_equipment_history": {
+		"primary_key": "line_id",
+		"table_listing_fields": [
+		"line_id",
+		"equipment_id",
+		"start_date",
+		"end_date",
+		"billing_entity_address_id",
+		"ship_date",
+		"install_date",
+		"installed_by"
+		]
+	},
+	"line_history": {
+		"primary_key": "line_id",
+		"table_listing_fields": [
+		"multi_service",
+		"active_flag",
+		"start_date",
+		"end_date",
+		"date_created",
+		"current_plan_id",
+		"exclude_alert",
+		"line_id",
+		"billing_entity_id",
+		"billing_entity_address_id",
+		"calling_station_id",
+		"line_assignment_type",
+		"customer_po",
+		"sales_order",
+		"radius_username",
+		"line_label",
+		"gv_username"
+		]
+	},
+	"line_usage_day": {
+		"primary_key": "line_id",
+		"table_listing_fields": [
+		"rowcount_tz",
+		"line_id",
+		"usage_date",
+		"time_connected_utc",
+		"acctsessiontime_utc",
+		"acctinputoctets_utc",
+		"acctoutputoctets_utc",
+		"rowcount_utc",
+		"time_connected_tz",
+		"acctsessiontime_tz",
+		"acctinputoctets_tz",
+		"acctoutputoctets_tz",
+		"timezone"
+		]
+	},
+	"line_usage_day_dw": {
+		"primary_key": "line_id",
+		"table_listing_fields": [
+		"line_usage_day_dw_id",
+		"usage_date",
+		"line_id",
+		"static_ip",
+		"bytes"
+		]
+	},
+	"line_usage_month": {
+		"primary_key": "line_id",
+		"table_listing_fields": [
+		"rowcount_tz",
+		"year",
+		"month",
+		"line_id",
+		"time_connected_utc",
+		"acctsessiontime_utc",
+		"acctinputoctets_utc",
+		"acctoutputoctets_utc",
+		"rowcount_utc",
+		"time_connected_tz",
+		"acctsessiontime_tz",
+		"acctinputoctets_tz",
+		"acctoutputoctets_tz",
+		"timezone"
+		]
+	},
+	"line_usage_month_dw": {
+		"primary_key": "line_usage_month_dw_id",
+		"table_listing_fields": [
+		"line_usage_month_dw_id",
+		"year",
+		"month",
+		"line_id",
+		"static_ip",
+		"bytes"
+		]
+	},
+	"location_labels": {
+		"primary_key": "line_id",
+		"table_listing_fields": [
+		"line_id",
+		"uptime",
+		"last_updated",
+		"primary_email_enabled",
+		"secondary_email_enabled",
+		"processor",
+		"fwver",
+		"primary_email",
+		"secondary_email",
+		"owner",
+		"id",
+		"name",
+		"address",
+		"Edit",
+		"Delete"
+		],
+		"access_role":[
+		"billing_entity",
+		"oss"
+		]
+	},
+	"location_labels_history": {
+		"primary_key": "line_id",
+		"table_listing_fields": [
+		"line_id",
+		"uptime",
+		"last_updated",
+		"primary_email_enabled",
+		"secondary_email_enabled",
+		"processor",
+		"fwver",
+		"primary_email",
+		"secondary_email",
+		"owner",
+		"id",
+		"name",
+		"address"
+		]
+	},
+	"location_labels_history": {
+		"primary_key": "line_id",
+		"table_listing_fields": [
+		"line_id",
+		"bytes"
+		]
+	},
+	"lum_gv_current": {
+		"primary_key": "imsi",
+		"table_listing_fields": [
+		"bytes",
+		"imsi"
+		]
+	},
+	"mrac_load": {
+		"primary_key": "radacctid",
+		"table_listing_fields": [
+		"nasipaddress",
+		"acctstarttime",
+		"acctstoptime",
+		"acctinputoctets",
+		"framedipaddress",
+		"acctstartdelay",
+		"acctstopdelay",
+		"acctoutputoctets",
+		"tunnelclientendpoint",
+		"acctsessiontime",
+		"radacctid",
+		"connectinfo_stop",
+		"calledstationid",
+		"callingstationid",
+		"acctterminatecause",
+		"servicetype",
+		"framedprotocol",
+		"xascendsessionsvrkey",
+		"nasidentifier",
+		"class",
+		"source_hostname",
+		"change_type",
+		"acctsessionid",
+		"acctuniqueid",
+		"username",
+		"realm",
+		"nasportid",
+		"nasporttype",
+		"acctauthentic",
+		"connectinfo_start"
+		]
+	},
+	"mrac_ts": {
+		"primary_key": "mrac_ts_id",
+		"table_listing_fields": [
+		"acctstoptime",
+		"acctinputoctets",
+		"acctoutputoctets",
+		"acctstarttime",
+		"mrac_ts_id",
+		"username",
+		"class"
+		]
+	},
+	"mrac_ts_portal": {
+		"primary_key": "mrac_ts_portal_id",
+		"table_listing_fields": [
+		"mrac_ts_portal_id",
+		"acctstarttime",
+		"acctstoptime",
+		"total_in_out_bytes",
+		"username",
+		"class"
+		]
+	},
+	"nas": {
+		"primary_key": "id",
+		"table_listing_fields": [
+		"id",
+		"ports",
+		"shortname",
+		"type",
+		"description",
+		"secret",
+		"community",
+		"nasname"
+		]
+	},
+	"plan": {
+		"primary_key": "plan_id",
+		"table_listing_fields": [
+		"plan_id",
+		"length_days",
+		"plan_type_id",
+		"product_id",
+		"line_id",
+		"start_date",
+		"end_date",
+		"accounting_start_date",
+		"prepaid_allowance",
+		"prepaid_balance",
+		"create_timestamp",
+		"prepaid_unit",
+		"sales_order",
+		"notes"
+		]
+	},
+	"plan_discount": {
+		"primary_key": "product_discount_id",
+		"table_listing_fields": [
+		"plan_id",
+		"product_discount_id",
+		"length_months",
+		"start_date",
+		"end_date",
+		"Edit",
+		"Delete"
+		]
+	},
+	"plan_extension": {
+		"primary_key": "product_extension_id",
+		"table_listing_fields": [
+		"plan_id",
+		"product_extension_id",
+		"length_months",
+		"start_date",
+		"end_date",
+		"Edit",
+		"Delete"
+		]
+	},
+	"plan_type": {
+		"primary_key": "plan_type_id",
+		"table_listing_fields": [
+		"plan_type_id",
+		"plan_type_desc"
+		]
+	},
+	"pricing_table": {
+		"primary_key": "pricing_table_id",
+		"table_listing_fields": [
+		"pricing_table_id",
+		"price",
+		"jbilling_customer_id",
+		"product_code",
+		"Edit",
+		"Delete"
+		]
+	},
+	"product": {
+		"primary_key": "product_id",
+		"table_listing_fields": [
+		"product_id",
+		"product_code",
+		"plan_type_id",		
+		"length_days",
+		"obsolete",
+		"product_desc",
+		"prepaid_unit",	
+		"prepaid_allowance",		
+		"sales_price",
+		"Edit",
+		"Delete"
+		],
+		"access_role":[
+		"usim",
+		"oss"
+		]
+	},
+	"product_carrier": {
+		"primary_key": "product_carrier_id",
+		"table_listing_fields": [
+		"product_carrier_id",
+		"product_id",
+		"carrier",
+		"carrier_internal_product_code",
+		"carrier_internal_product_code_descr"
+		]
+	},
+	"product_discount": {
+		"primary_key": "product_discount_id",
+		"table_listing_fields": [
+		"product_id",
+		"product_discount_id",
+		"discount_per_line",
+		"billing_period",
+		"description",
+		"discount_name",
+		"discount_period"
+		]
+	},
+	"product_extension": {
+		"primary_key": "product_extension_id",
+		"table_listing_fields": [
+		"product_extension_id",
+		"product_id",
+		"line_minimum",
+		"price_per_line",
+		"minimum_line_fee",
+		"extension_name",
+		"description",
+		"billing_period"
+		]
+	},
+	"product_tier": {
+		"primary_key": "product_id",
+		"table_listing_fields": [
+		"product_id",
+		"product_tier",
+		"tier_mb",
+		"unit_lower_bound",
+		"unit_upper_bound",
+		"mb_overage",
+		"price_per_line"
+		]
+	},
+	"purchase_order": {
+		"primary_key": "purchase_order",
+		"table_listing_fields": [
+		"po_term",
+		"po_quantity",
+		"current_quantity",
+		"unit_price",
+		"term_price",
+		"purchase_order",
+		"Edit",
+		"Delete"
+		]
+	},
+	"radcheck": {
+		"primary_key": "id",
+		"table_listing_fields": [
+		"id",
+		"username",
+		"attribute",
+		"op",
+		"value"
+		],
+		"access_role":[
+		"esim",
+		"usim",
+		"oss"
+		]
+	},
+	"radgroupcheck": {
+		"primary_key": "id",
+		"table_listing_fields": [
+		"id",
+		"groupname",
+		"attribute",
+		"op",
+		"value",
+		"Delete"
+		]
+	},
+	"radgroupreply": {
+		"primary_key": "id",
+		"table_listing_fields": [
+		"id",
+		"groupname",
+		"attribute",
+		"op",
+		"value"
+		]
+	},
+	"radreply": {
+		"primary_key": "id",
+		"table_listing_fields": [
+		"id",
+		"username",
+		"attribute",
+		"op",
+		"value",
+		"priority"
+		],
+		"access_role":[
+		"esim",
+		"usim",
+		"oss"
+		]
+	},
+	"rma_form": {
+		"primary_key": "id",
+		"table_listing_fields": [
+		"id",
+		"reason_id",
+		"create_date",
+		"agreement_id",
+		"freshdesk_id",
+		"description",
+		"return_tracking",
+		"address1",
+		"address2",
+		"city",
+		"state",
+		"zipcode",
+		"old_esn_hex",
+		"email",
+		"status",
+		"new_esn_hex",
+		"name",
+		"username",
+		"phone_number",
+		"shipping_tracking"
+		]
+	},
+	"sales_order": {
+		"primary_key": "sales_order",
+		"table_listing_fields": [
+		"date_created",
+		"sales_order",
+		"Edit",
+		"Delete"
+		]
+	},
+	"soup_alerts_table": {
+		"primary_key": "serial_number",
+		"table_listing_fields": [
+		"local_timestamp",
+		"server_timestamp",
+		"did",
+		"returncode",
+		"serial_number",
+		"service",
+		"output"
+		]
+	},
+	"soup_cellsignal": {
+		"primary_key": "cellsignal",
+		"table_listing_fields": [
+		"timestamp",
+		"esn",
+		"esn1",
+		"esn2",
+		"cellsignal"
+		]
+	},
+	"soup_config": {
+		"primary_key": "soup_config_id",
+		"table_listing_fields": [
+		"soup_config_id",
+		"equipment_model_id",
+		"name"
+		]
+	},
+	"soup_config_info": {
+		"primary_key": "config_id",
+		"table_listing_fields": [
+		"config_id",
+		"equipment_id",
+		"message",
+		"config_name"
+		]
+	},
+	"soup_device": {
+		"primary_key": "did",
+		"table_listing_fields": [
+		"did",
+		"create_date",
+		"timestamp",
+		"eui",
+		"model",
+		"serial_number",
+		"part_number",
+		"description",
+		"location"
+		]
+	},
+	"soup_device_stats_table": {
+		"primary_key": "serial_number",
+		"table_listing_fields": [
+		"uptime",
+		"pda_errors",
+		"did",
+		"datetime",
+		"firmware_time",
+		"log_errors",
+		"log_warnings",
+		"serial_number",
+		"firmware"
+		]
+	},
+	"soup_dirnames": {
+		"primary_key": "soup_dirnames_id",
+		"table_listing_fields": [
+		"soup_dirnames_id",
+		"billing_entity_id",
+		"soup_config_id",
+		"dirname"
+		]
+	},
+	"soup_group_info": {
+		"primary_key": "gid",
+		"table_listing_fields": [
+		"gid",
+		"aid",
+		"name"
+		]
+	},
+	"soup_update_from_oss": {
+		"primary_key": "oss_equipment_id",
+		"table_listing_fields": [
+		"oss_equipment_id",
+		"oss_line_id",
+		"oss_billing_entity_id",
+		"gd_gid",
+		"d_did",
+		"oss_billing_entity_name",
+		"status",
+		"d_eui",
+		"d_serial_number",
+		"d_description",
+		"gi_name"
+		]
+	},
+	"state_code": {
+		"primary_key": "state_code",
+		"table_listing_fields": [
+		"state_code",
+		"state_province_name",
+		"country_code"
+		]
+	},
+	"static_ip_carrier_def": {
+		"primary_key": "carrier_def_id",
+		"table_listing_fields": [
+		"carrier_def_id",
+		"carrier"
+		]
+	},
+	"static_ip_pool": {
+		"primary_key": "id",
+		"table_listing_fields": [
+		"is_assigned",
+		"carrier_id",
+		"billing_entity_id",
+		"id",
+		"line_id",
+		"static_ip",
+		"groupname"
+		]
+	},
+	"systech_log": {
+		"primary_key": "systech_log_id",
+		"table_listing_fields": [
+		"systech_log_id",
+		"created_ts",
+		"equipment_id",
+		"model",
+		"part_number",
+		"serial_number",
+		"firmware_revision",
+		"os_version",
+		"configuration_database",
+		"ethernet_address",
+		"ip_address",
+		"ip_netmask",
+		"ipv6_addresses",
+		"current_system_time",
+		"system_up_time"
+		]
+	},
+	"system_parameter": {
+		"primary_key": "hostname",
+		"table_listing_fields": [
+		"repl_flag",
+		"radacct_flag",
+		"radpostauth_flag",
+		"sprint_flag",
+		"repl_target_username",
+		"hostname",
+		"repl_target_password",
+		"ip_address",
+		"repl_port",
+		"repl_target_db"
+		]
+	},
+	"usergroup": {
+		"primary_key": "id",
+		"table_listing_fields": [
+		"id",
+		"priority",
+		"username",
+		"groupname"
+		]
+	},
+	"username": {
+		"primary_key": "username",
+		"table_listing_fields": [
+		"auth_pod",
+		"billing_entity_id",
+		"primary_service",
+		"enabled",
+		"start_date",
+		"end_date",
+		"date_created",
+		"notes",
+		"username"
+		]
+	},
+	"usim_uniq": {
+		"primary_key": "usim_uniq_id",
+		"table_listing_fields": [
+		"usim_uniq_id",
+		"item_id",
+		"last_updated",
+		"imsi",
+		"msisdn",
+		"itid_iccid",
+		"plsi_iccid",
+		"master_id"
+		]
+	},
+	"webui_users": {
+		"primary_key": "id",
+		"table_listing_fields": [
+		"id",
+		"creator",
+		"created",
+		"lastupdatedby",
+		"lastupdated",
+		"userlevelid",
+		"enabled",
+		"organization",
+		"realname",
+		"nickname",
+		"lang",
+		"emailencoding",
+		"webencoding",
+		"externalcontactinfoid",
+		"contactinfosystem",
+		"externalauthid",
+		"authsystem",
+		"gecos",
+		"homephone",
+		"workphone",
+		"mobilephone",
+		"pagerphone",
+		"webui_users1",
+		"webui_users2",
+		"city",
+		"state",
+		"zip",
+		"country",
+		"timezone",
+		"pgpkey",
+		"username",
+		"password",
+		"comments",
+		"signature",
+		"emailwebui_users",
+		"freeformcontactinfo"
+		]
+	},
+	"portal_active_lines_vw": {
+		"primary_key": "line_id",
+		"info_tag": "true",
+		"info_param": "prof_iccid",
+		"alias": [
+		"Edit",
+		"Multi Service",
+		"Serial Number",
+		"ESN",
+		"Static IP",
+		"Location ID",		
+		"Location Owner",
+		"Model",
+		"Product Code",
+		"Connection Status",
+		"Last Connected",
+		"Connected",
+		"Config Name",
+		"Config Status",
+		"Firmware Version",
+		"Firmware Status",
+		"Total MB",
+		"Warranty End Date"		
+		],
+		"table_listing_fields": [
+		"line_id",
+		"multi_service",
+		"serial_number",
+		"esn_hex",
+		"static_ip_address",
+		"location_id",		
+		"location_owner",
+		"equipment_model_number",
+		"invoice_product_code",
+		"connection_status",
+		"last_connected_timestamp",
+		"is_connected",
+		"soup_config_name",
+		"config_status",
+		"firmware_version",
+		"firmware_status",
+		"total_in_out_mb",
+		"warranty_end_date"		
+		],
+		"access_role":[
+		"usim",
+		"oss"
+		]
+	},
+	"esim_inventory": {
+		"primary_key": "esim_inventory_id",
+		"table_listing_fields": [
+		"esim_inventory_id",
+		"profile_type",
+		"state",
+		"quantity",
+		"created_at"
+		],
+		"access_role":[
+		"esim",
+		"usim",
+		"oss"
+		]
+	},
+	"esim_profiles": {
+		"primary_key": "esim_profiles_id",
+		"table_listing_fields": [
+		"esim_profiles_id",
+		"profile_type",
+		"iccid",
+		"state",
+		"created_at"
+		],
+		"access_role":[
+		"esim",
+		"usim",
+		"oss"
+		]
+	},
+	"esim_profile_type": {
+		"primary_key": "esim_profile_type_id",
+		"table_listing_fields": [
+		"esim_profile_type_id",
+		"esim_profile_type",
+		"partner_id",
+		"created_at",
+		"Edit",
+		"Delete"
+		],
+		"access_role":[
+		"esim",
+		"usim",
+		"oss"
+		]
+	},
+	"esim_10t_status_vw": {
+		"primary_key": "esim_profiles_id",
+		"info_tag": "true",
+		"info_param": "prof_iccid",
+		"table_listing_fields": [
+		"esim_profiles_id",
+		"profile_type",
+		"partner_id",
+		"partner_name",
+		"state",
+		"prof_iccid",
+		"prov_iccid",
+		"imsi",
+		"msisdn",
+		"esim_file_name",
+		"created_at"
+		],
+		"access_role":[
+		"esim",
+		"usim",
+		"oss"
+		]
+	},
+	"line_detail": {
+		"primary_key": "line_id",
+		"table_listing_fields": [
+		"line_id",
+		"equipment_id",
+		"username",
+		"carrier",
+		"static_ip_address",
+		"signal_strength",
+		"model_number",
+		"connection_status",
+		"last_connected_timestamp",
+		"bytes",
+		"mb"
+		],
+		"access_role":[
+		"usim",
+		"oss"
+		]
+	},
+	"partner": {
+		"primary_key": "partner_id",
+		"table_listing_fields": [
+		"partner_id",
+		"partner_name",
+		"op",
+		"Edit",
+		"Delete"
+		],
+		"access_role":[
+		"usim",
+		"oss"
+		]
+	},
+	"input_file": {
+		"primary_key": "input_file_id",
+		"table_listing_fields": [
+		"input_file_id",
+		"partner_id",
+		"partner_name",		
+		"input_file_name",
+		"date_created",
+		"rpad_offset",
+		"input_file_type",
+		"environment",		
+		"Input_Elements",
+		"ESIM_File_Detail",
+		"Edit"
+		],
+		"access_role":[
+		"usim",
+		"oss"
+		]
+	},
+	"input_file_detail": {
+		"primary_key": "input_file_id",
+		"table_listing_fields": [
+		"input_file_id",
+		"mnoid",
+		"profile_type",
+		"po_no",
+		"order_date",
+		"sim_qty",
+		"sim_type",
+		"operator",
+		"mcc_mnc",
+		"initial_state_of_profile",
+		"Edit",
+		"Delete"
+		],
+		"access_role":[
+		"usim",
+		"oss"
+		]
+	},
+	"input_element": {
+		"primary_key": "input_element",
+		"table_listing_fields": [
+		"input_file_id",
+		"input_element",
+		"position",
+		"static",
+		"static_value",
+		"Edit",
+		"Delete"
+		],
+		"access_role":[
+		"usim",
+		"oss"
+		]
+	},
+	"input_element_type": {
+		"primary_key": "input_element",
+		"table_listing_fields": [
+		"input_element",
+		"element_type",
+		"static",
+		"Edit",
+		"Delete"
+		],
+		"access_role":[
+		"usim",
+		"oss"
+		]
+	},
+	"esim_provision": {
+		"primary_key": "esim_provision_id",
+		"table_listing_fields": [
+		"esim_provision_id",
+		"esim_file_name",
+		"iccid",
+		"imsi",
+		"pin1",
+		"puk1",
+		"pin2",
+		"puk2",
+		"adm",
+		"keyset01kic",
+		"keyset01kid",
+		"keyset01kik",
+		"keyset01tslpsk",
+		"keyset01tlsdek",
+		"msisdn",
+		"ki",
+		"opc"
+		],
+		"access_role":[
+		"usim",
+		"oss"
+		]
+	},
+	"provision_history": {
+		"primary_key": "master_id",
+		"table_listing_fields": [
+		"master_id",
+		"ki",
+		"op",
+		"imsi",
+		"iccid",
+		"msisdn",
+		"created_at"
+		],
+		"access_role":[
+		"usim",
+		"oss"
+		]
+	},
+	"rma_form": {
+		"primary_key": "id",
+		"table_listing_fields": [
+		"id",
+		"name",
+		"username",
+		"phone_number",
+		"reason_id",
+		"description",
+		"create_date",
+		"address1",
+		"address2",
+		"city",
+		"state",
+		"zipcode",
+		"old_esn_hex",
+		"email",
+		"agreement_id",
+		"new_esn_hex",
+		"shipping_tracking",
+		"return_tracking",
+		"status",
+		"freshdesk_id"
+		],
+		"access_role":[
+		"usim",
+		"oss"
+		]
+	}
+}

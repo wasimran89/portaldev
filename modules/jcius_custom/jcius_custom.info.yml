@@ -1,0 +1,6 @@
+name: 'JCIUS Custom Module'
+type: module
+description: 'JCIUS Custom Module Integration'
+core: 8.x
+core_version_requirement: ^8 || ^9
+package: 'Custom'

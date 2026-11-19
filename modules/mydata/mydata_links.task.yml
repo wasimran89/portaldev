@@ -1,0 +1,16 @@
+mydata.tabs:
+  route_name: mydata.tabs.default
+  title: Default primary tab
+  base_route: mydata.tabs.default
+
+mydata.tabs_second:
+  route_name: mydata.tabs.first
+  title: Second
+  base_route: mydata.tabs.default
+  weight: 2
+
+mydata.tabs_third:
+  route_name: mydata.tabs.second
+  title: Third
+  base_route: mydata.tabs.default
+  weight: 3

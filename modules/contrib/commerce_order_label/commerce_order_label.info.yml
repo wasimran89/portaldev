@@ -1,0 +1,13 @@
+name: 'Commerce Order Label'
+type: module
+description: 'Resolves empty labels on commerce order entities.'
+core_version_requirement: ^9.2 || ^10
+package: Commerce
+dependencies:
+  - commerce:commerce
+  - commerce:commerce_order
+
+# Information added by Drupal.org packaging script on 2022-04-15
+version: '1.0.0'
+project: 'commerce_order_label'
+datestamp: 1650025665

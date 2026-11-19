@@ -1,0 +1,4 @@
+qr_activity_log.qr_activity_log_page:
+  path: '/qr-code-activity-log'
+  requirements:
+    _permission: 'administer site configuration'

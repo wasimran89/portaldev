@@ -1,0 +1,141 @@
+<?php
+
+/**
+ * Stores and displays a list of recently visited pages on the site.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ *
+ * Provides definitions for drupal's help features.
+ */
+function last_visited_pages_help($route_name, RouteMatchInterface $route_match) {
+	switch ($route_name) {
+		case 'last_visited_pages.settings':
+		return t('These settings helps configure the max number of recently visited links to be displayed in the block');
+
+		case 'help.page.last_visited_pages':
+		$output = '<p>' . t('Last Visited Pages is a simple module that displays a list of links user visited on the site.') . '</p>';
+		return $output;
+	}
+}
+
+/**
+ * Implements hook_uninstall()
+ */
+function last_visited_pages_uninstall() {
+	\Drupal::database()->schema()->dropTable('last_visited_pages');
+}
+
+/**
+ * Implements hook_views_data().
+ */
+function last_visited_pages_views_data() {
+  \Drupal::logger('last_visited_pages')->notice('hook_views_data() executed.');
+  $data = [];
+
+  // Define the table and its base configuration.
+  $data['last_visited_pages']['table'] = [
+    'group' => t('Last Visited Pages'), // The group name in Views UI.
+    'base' => [
+      'field' => 'id',
+      'title' => t('Last Visited Pages'),
+      'help' => t('Stores last visited page records.'),
+    ],
+  ];
+
+  // Define the 'id' field.
+  $data['last_visited_pages']['id'] = [
+    'title' => t('ID'),
+    'help' => t('Primary Key: Unique ID.'),
+    'field' => [
+      'id' => 'numeric',
+    ],
+    'sort' => [
+      'id' => 'standard',
+    ],
+    'filter' => [
+      'id' => 'numeric',
+    ],
+  ];
+
+  // Define the 'title' field.
+  $data['last_visited_pages']['title'] = [
+    'title' => t('Title'),
+    'help' => t('Last visited page title.'),
+    'field' => [
+      'id' => 'standard',
+    ],
+    'sort' => [
+      'id' => 'standard',
+    ],
+    'filter' => [
+      'id' => 'string',
+    ],
+  ];
+
+  // Define the 'path' field.
+  $data['last_visited_pages']['path'] = [
+    'title' => t('Path'),
+    'help' => t('Last visited page path.'),
+    'field' => [
+      'id' => 'standard',
+    ],
+    'sort' => [
+      'id' => 'standard',
+    ],
+    'filter' => [
+      'id' => 'string',
+    ],
+  ];
+
+  // Define the 'ip_address' field.
+  $data['last_visited_pages']['ip_address'] = [
+    'title' => t('IP Address'),
+    'help' => t('IP address of the last visited page.'),
+    'field' => [
+      'id' => 'standard',
+    ],
+    'sort' => [
+      'id' => 'standard',
+    ],
+    'filter' => [
+      'id' => 'string',
+    ],
+  ];
+
+  // Define the 'uid' field with a relationship to users_field_data table.
+  $data['last_visited_pages']['uid'] = [
+    'title' => t('User ID'),
+    'help' => t('User ID who visited the page.'),
+    'field' => [
+      'id' => 'standard',
+    ],
+    'relationship' => [
+      'base' => 'users_field_data', // Target table.
+      'base field' => 'uid',        // Target field in users_field_data.
+      'relationship field' => 'uid', // Local field in last_visited_pages.
+      'id' => 'standard',
+      'label' => t('User'),
+    ],
+  ];
+
+  // Define the 'timestamp' field.
+  $data['last_visited_pages']['timestamp'] = [
+    'title' => t('Timestamp'),
+    'help' => t('Timestamp of when the page was visited.'),
+    'field' => [
+      'id' => 'date',
+    ],
+    'sort' => [
+      'id' => 'date',
+    ],
+    'filter' => [
+      'id' => 'date',
+    ],
+  ];
+
+  return $data;
+}

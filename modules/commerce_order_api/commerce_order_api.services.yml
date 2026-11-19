@@ -1,0 +1,4 @@
+services:
+  commerce_order_api.order_controller:
+    class: 'Drupal\commerce_order_api\Controller\OrderApiController'
+    arguments: ['@entity_type.manager', '@logger.factory']

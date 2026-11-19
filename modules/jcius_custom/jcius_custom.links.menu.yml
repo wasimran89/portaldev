@@ -1,0 +1,13 @@
+jcius_custom.jcius_api_config_form:
+  title: 'SIMS Line View API configuration'
+  route_name: jcius_custom.jcius_api_config_form
+  description: 'SIMS Line View API configuration'
+  parent: system.admin_config_system
+  weight: 99
+jcius_custom.line_detail_view_config_form:
+  title: 'Row highlighting Config'
+  route_name: jcius_custom.line_detail_view_config_form
+  description: 'Row highlighting Config Setting'
+  parent: system.admin_config_system
+  weight: 99
+

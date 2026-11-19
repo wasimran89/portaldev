@@ -1,0 +1,22 @@
+last_visited_pages.settings:
+  path: 'admin/config/last-visited-pages-settings'
+  defaults:
+    _form: '\Drupal\last_visited_pages\Form\LastVisitedPagesSettingsForm'
+    _title: 'Last Visited Pages Settings'
+  requirements:
+    _permission: 'administer site configuration'
+last_visited_pages.user_tab:
+  path: '/user/{user}/activities'
+  defaults:
+    _controller: '\Drupal\last_visited_pages\Controller\LastVisitedPagesController::buildContent'
+    _title_callback: '\Drupal\last_visited_pages\Controller\LastVisitedPagesController::getTitle'
+  requirements:
+    _role: 'administrator'
+    _entity_access: 'user.view'
+    user: \d+
+last_visited_pages.report:
+  path: '/last-visited-pages-report'
+  defaults:
+    _title: 'Last Visited Pages Report'
+  requirements:
+    _role: 'administrator'

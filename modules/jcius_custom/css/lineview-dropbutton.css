@@ -1,0 +1,46 @@
+/**
+ * @file
+ * Visual styles for custom  field component.
+ */
+.field--name-field-sim-profile {
+    visibility: hidden;
+    width: 0px;
+    height: 0px;
+}
+ .user-logged-in form#user-form {
+    margin: 5px;
+}
+.path-sim-line-detail td {
+    padding: 0px 12px;
+    text-align: left;
+}
+tr.rowbg-color {
+
+    background-color: #ff9800;
+    color:white;
+}
+
+tr.rowbg-color:hover {
+    background-color: #ff9800;
+    color:white;
+}
+td.views-field.views-field-dropbutton {
+    background: #ffffff;
+}
+
+form#user-register-form {
+    max-width: 100% !IMPORTANT;
+}
+
+
+.menu-base-theme ul li {
+    width: 79%;
+    list-style: circle;
+    margin-left: 18px;
+    border-bottom: 1px solid #18c2ec !important;
+}
+
+.edit-in-place-editable div, fieldset.edit-in-place-clickable.form-item .edit-in-place-editable ol, fieldset.edit-in-place-clickable.form-item .edit-in-place-editable ul {
+    white-space: nowrap !important;
+    min-width: 50% !important;
+}

@@ -1,0 +1,10 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - commerce_order_update
+id: change_order_status
+label: 'Change Order Status'
+type: commerce_order
+plugin: change_order_status
+configuration: {  }

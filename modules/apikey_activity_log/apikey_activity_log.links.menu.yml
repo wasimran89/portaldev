@@ -1,0 +1,6 @@
+apikey_activity_log.admin:
+  title: 'API Key Activity Log'
+  route_name: api_key_activity_log.api_key_activity_log_page
+  description: 'View the API Key activity log.'
+  parent: system.admin_reports
+  weight: 10

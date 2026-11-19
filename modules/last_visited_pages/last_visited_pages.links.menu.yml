@@ -1,0 +1,17 @@
+last_visited_pages.settings:
+  title: 'Last Visited Pages'
+  parent: system.admin_config
+  route_name: last_visited_pages.settings
+
+last_visited_pages.settings_block:
+  title: Last Visited Pages
+  description: 'Configure the number of last visited pages links.'
+  parent: system.admin_config_ui
+  route_name: last_visited_pages.settings
+
+last_visited_pages.report:
+  title: 'Last Visited Pages'
+  route_name: last_visited_pages.report
+  parent: system.admin_reports
+  description: 'Show last visited pages of user.'
+  menu_name: admin

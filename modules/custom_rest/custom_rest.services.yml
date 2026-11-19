@@ -1,0 +1,23 @@
+services:
+ # Service Name.
+ custom_rest.second:
+   class: Drupal\Core\Database\Connection
+   factory: 'Drupal\Core\Database\Database::getConnection'
+   arguments: ['second']
+
+ # second database dependent serivce.
+ custom_rest.db_logic:
+   # Class that renders the service.
+   class: Drupal\custom_rest\CustomRestResource
+   # Arguments that will be sent to the class constructor.
+   arguments: ['@custom_rest.second']
+   # A more detailed explanation: https://www.drupal.org/node/2239393.
+
+ # second2 database dependent serivce.
+ custom_rest.db_logic2:
+   # Class that renders the service.
+   class: Drupal\custom_rest\CustomRestResource2
+   # Arguments that will be sent to the class constructor.
+   arguments: ['@custom_rest.second']
+   # A more detailed explanation: https://www.drupal.org/node/2239393.
+

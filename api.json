@@ -1,0 +1,945 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "10T API",
+    "version": "1.0.0"
+  },
+  "host": "devportal.jcius.com",
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/user/login": {
+      "post": {
+        "summary": "Login",
+        "parameters": [
+          {
+            "name": "_format",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "example": "json"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "pass": {
+                  "type": "string"
+                }
+              },
+              "example": {
+                "name": "abc@gmail.com",
+                "pass": "abc123"
+              }
+            }
+          }
+        ],
+        "responses": {
+  "200": {
+    "description": "OK"
+  },
+  "201": {
+    "description": "Created"
+  },
+  "400": {
+    "description": "Bad Request"
+  },
+  "401": {
+    "description": "Unauthorized"
+  },
+  "403": {
+    "description": "Forbidden"
+  },
+  "404": {
+    "description": "Not Found"
+  },
+  "409": {
+    "description": "Conflict"
+  },
+  "422": {
+    "description": "Unprocessable Entity"
+  },
+  "500": {
+    "description": "Internal Server Error"
+  }
+}
+      }
+    },
+    "/api/list": {
+      "get": {
+        "summary": "eSim Data List",
+        "parameters": [
+          {
+            "name": "_format",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "example": "json"
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "type": "string",
+            "example": "RELEASED"
+          },
+          {
+            "name": "partner_name",
+            "in": "query",
+            "type": "string",
+            "example": "JCI US"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "422": {
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "X-CSRF-Token": []
+          },
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/api/credit": {
+      "get": {
+        "summary": "Credit Release Reset",
+        "parameters": [
+          {
+            "name": "_format",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "example": "json"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "422": {
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "X-CSRF-Token": []
+          },
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/api/info": {
+      "post": {
+        "summary": "Get Profile Info",
+        "parameters": [
+          {
+            "name": "_format",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "example": "json"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "iccid": {
+                  "type": "string"
+                }
+              },
+              "example": {
+                "iccid": "89105600000000397328"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "422": {
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "X-CSRF-Token": []
+          },
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/api/state": {
+      "post": {
+        "summary": "Get Profile State",
+        "parameters": [
+          {
+            "name": "_format",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "example": "json"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "iccid": {
+                  "type": "string"
+                }
+              },
+              "example": {
+                "iccid": "89105600000000397328"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "422": {
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "X-CSRF-Token": []
+          },
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/api/profilehistory": {
+      "post": {
+        "summary": "Get Profile History",
+        "parameters": [
+          {
+            "name": "_format",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "example": "json"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "iccid": {
+                  "type": "string"
+                }
+              },
+              "example": {
+                "iccid": "89105600000000435896"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "422": {
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "X-CSRF-Token": []
+          },
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/api/reseterror": {
+      "post": {
+        "summary": "Cancel Order Reset",
+        "parameters": [
+          {
+            "name": "_format",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "example": "json"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "iccid": {
+                  "type": "string"
+                }
+              },
+              "example": {
+                "iccid": "89105631364000000008"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "422": {
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "X-CSRF-Token": []
+          },
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/api/final": {
+      "post": {
+        "summary": "Cancel Order Final",
+        "parameters": [
+          {
+            "name": "_format",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "example": "json"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "iccid": {
+                  "type": "string"
+                }
+              },
+              "example": {
+                "iccid": "89105631364000000008"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "422": {
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "X-CSRF-Token": []
+          },
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/api/release": {
+      "post": {
+        "summary": "Release",
+        "parameters": [
+          {
+            "name": "_format",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "example": "json"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "iccid": {
+                  "type": "string"
+                }
+              },
+              "example": {
+                "iccid": "89105600000000435896"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "422": {
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "X-CSRF-Token": []
+          },
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/api/reset": {
+      "post": {
+        "summary": "Reset",
+        "parameters": [
+          {
+            "name": "_format",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "example": "json"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "iccid": {
+                  "type": "string"
+                }
+              },
+              "example": {
+                "iccid": "89105600000000435896"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "422": {
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "X-CSRF-Token": []
+          },
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/api/unrelease": {
+      "post": {
+        "summary": "Un-Release",
+        "parameters": [
+          {
+            "name": "_format",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "example": "json"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "iccid": {
+                  "type": "string"
+                }
+              },
+              "example": {
+                "iccid": "89105600000000435896"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "422": {
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "X-CSRF-Token": []
+          },
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/api/qr": {
+      "post": {
+        "summary": "Get QR Code",
+        "parameters": [
+          {
+            "name": "_format",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "example": "json"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "iccid": {
+                  "type": "string"
+                }
+              },
+              "example": {
+                "iccid": "89105600000000435896"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "422": {
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "X-CSRF-Token": []
+          },
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/api/qr/email": {
+      "post": {
+        "summary": "Get QR Email",
+        "parameters": [
+          {
+            "name": "_format",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "example": "json"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "iccid": {
+                  "type": "string"
+                },
+                "email": {
+                  "type": "string"
+                }
+              },
+              "example": {
+                "iccid": "89105600000000435896",
+                "email": "abc@jcius.com"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "422": {
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "X-CSRF-Token": []
+          },
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    },
+    "/api/qr/uri": {
+      "post": {
+        "summary": "Get QR URI",
+        "parameters": [
+          {
+            "name": "_format",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "example": "json"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "iccid": {
+                  "type": "string"
+                }
+              },
+              "example": {
+                "iccid": "89105631501000110036"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "422": {
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "X-CSRF-Token": []
+          },
+          {
+            "x-api-key": []
+          }
+        ]
+      }
+    }
+  },
+  "securityDefinitions": {
+    "X-CSRF-Token": {
+      "type": "apiKey",
+      "name": "X-CSRF-Token",
+      "in": "header",
+      "description": "CSRF Token required for certain operations"
+    },
+    "x-api-key": {
+      "type": "apiKey",
+      "name": "x-api-key",
+      "in": "header",
+      "description": "Custom API Key for group"
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "version": "1",
+  "azureKey": "MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEA6HnIhKODQ4x/5a8mkiqcEMFfRUt+DlGw23kURtIBMPEZ6ZSTAOfFlRUHuu699A2jbOIYAt8/EY1WMtxpOHx3cbaQKNfPG6JThTKabDFYbL9OY2F14gQjU6clhPcZ9/9rYfK7N7KNhoXCobzm2RqLHmPygNvR+njkmbcOEWA7AZ/nWy2IJ/sheu6teYLNm9Bk/O8xD8+nk7YCQxHufbifdRZFNyCLjVKeMHyl4ctJX5yxuCL+q/Lrvjws+GX0xL/1gaFPU/hhZVxtFS1LGTWAwmGoG2S0LFJtBvr1uVVBHlDpUOHiBUPtzP52A6/Jco+7i6l1DG67Dv9/+jMSDS+LNVkJzXbPaucBA94dX0/jo8ENwDn5KIMr6suNiu6n48Qw4kXXQXfkydZOhY3X3HustfrhzuWzef2sK57pJbAy1qC45EERXPI1CE9rz7PgkXzA0jORgi0Me2keUUKLH9D0A/vJ16bdeFQ3iipwypgKsueJ33hwwFcstPAyXhOrtKW9DO0fc1k+d8cmL4EvZz5/SEpOAwivV+tSEmQsIliflQuo0Z6/y2xKjR+K108+vyZkAwB3fWxeOC3Pu0S/RKEej2NA/pxeIJ+Dd+3KBPWun1UJhXM7eaLHCdEU87Fk1zWbZI8YqxizGMxNz2xqY1N0OH06Ysjcqm2VH1Sj9arCinUCAwEAAQ==",
+  "vendorKeyFingerprint": "2ba25c26c85f6a2e034e84d8ce59b0306c7139e19845c450c83fc74605166d54",
+  "encryptedTransportKey": "UHi+G9NEBr5ejy9X3vbumhL3RqORP/h5VeM0tuVEEi7KxYTXE9Q+4vtKf9itPluGeS3J5tWyc8QPzoPNmhsWiu2yxzXqZO7sWHRuHqF+jvl+gvEuLYttGr3nSwCTBhWgj8IFJyDb13Hr4UTNP4OwCl++yquYCQErl31mkOV38E3utiHOYDPB6SgnhYLT3TM4XE8Nd2ZVn8AH4Qasq7iaCToMTCAuMErZsPIFZWIjzjSG108VCqGIk76IipdHpsQU8vyS4Krm/GatZoqEak9ndHLCWoSUM2TJwu7lGGUzz5o7aMDAqcGuRyqJRggx5kUOpZQuuzeyC/kPNnJIxKBvDgs1zLi9WSDsuhwW7YhmUNIxmrBo4mHtgKzqeOhgrJaeq7cSHjR6YNJUy/R5NOF/6sBfv4+b7gnrCmoDcfKs7dVattoUWXbJNFU+pc1OXgjHFXze2oClZFWrvG1hTJF9HZ1CyEvzQzqOUfLTCC2Dlqgk4sfY4OftQI0OZtz2Ce+Ys+npzReo6eoZ8MvMNC2sKiD8PUhAhqST4zeYT5xcUCykjQFqsvS4aVR8rlV2+SjFd0UiJGrnNsnjxyd6WKCkrRhLkfOQu0H4oghClhkeTNh/m3tquqgzmGnEgk/Ax6y/fQpC6hyZgy56h9mWidBb0dmqttGKhMAD4+R/TMMcoVM=",
+  "signedTransportKey": "n5zR6RDsnJ9jmwablE3vy+qq6kY9pB3dbkBQksKTZtjUiTDhphS+tkwwE2lNA77F+MmtkH0SKCHWEm9/337xWMQOhJm6qD53WLSVB/qESsNCrA29oW0uF7rHR0NGFohBRjds85bWK7Ov/0axYsXvmDP9pdTdp3TWBmEnGz/3WLKlBWLi3TncPJcaOtfRqU10hXgzj97wVdZ0RjSqlApHVdtB8fc/VPAp3d8f8LszSvysreMsuZABcAq6EIgTNEGz/K7tzyIKJa8LSojxULsREU7TuHwFLF7FlAgU5JOUcq//nnpdR6JamsgYgzx7w6s43b8oHNaEoXbmHxcIKhpDyhXvQ0tRvNxJPvG4xrWs92o1ZwCK9PBsiPG51WqqWFI6nzM7aBxOirQk8zv+PP05unt0z3Dz3esrlpDH0XT817SrY9tdRJW5BmIPW5EzD2j0YTlapF7SqLNm3+UVeAafCsN2NP7EM1+ebUCkfRt9coqoFav2pVLZqQG3zdZXEtd5KCkw8/FBEkfe1MK/mL51jUSkiBJV4HJW+Ss6uPIXiauZ4T3/a7iI3GveFjUBFha1wCkjhZwVFt2ASeiuACaaNKJcotTR3tVv+7vl/Wfiya9ACp0G07GCysc71oGs0ztHQ90U2qkXDa51EXMF0VYRDJwUOIya0gyeK2HEcuik3BY=",
+  "sims": [
+    {
+      "simName": "JCIUS_SIM_Card",
+      "properties": {
+        "deviceType": "Raspberry Pi",
+        "integratedCircuitCardIdentifier": "89109900000000999991",
+        "internationalMobileSubscriberIdentity": "999010000999991",
+        "encryptedCredentials": "7zOKBW1kuAvkPdVZGkFhpcekt+18DITfQHc3DZSuXIClst69KMfm0Q7AePr/ztXP50ew6t+GUk7necba1235xasmyET0Xwfu5tsNoLhfS6v3Q11BOXThEg9dPN/t+LPJ50IP5G1WgegcF08lJoRbTfWaujPf9ovLTevrjKn/MA4GW/zf/TOa98BGU0B5RNm0+tO02O6UvUrd0+skOBvpj0ZFP126xlbCQA4wKkWI6IOrWipZx5L/2yZOQ04njh/4gTUgEP7k1Xws7ViemtX4kkw2oCz8sJRalH06tDHig7GqBMzJXI989ip/x21REkryjlFgDfZQzXBaXBJnySCtDLnvFJy/Op+prZ4YIvLchNcbG3kqKRGSjrMU1dtRsg0j9GJFza0rjWUOZGaoqmB6t3E9xcDgaR9g4K4/3iIutYAN35WZefBdelqbWcbJ0266YlsvcnQ76eCYfpe3rIAf3ln3Q2LXvhmJ6tFag6OZ36gxXrSoFmkK/kghPKJWI+5hywI0F4Orvi7E",
+        "simPolicy": {
+          "id": "JCIUS SIM Policy"
+        },
+        "staticIpConfiguration": [
+          {
+            "attachedDataNetwork": {
+              "id": "MyPublicNetwork"
+            },
+            "slice": {
+              "id": "Slice"
+            },
+            "staticIp": {
+              "ipv4Address": "192.168.0.1"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

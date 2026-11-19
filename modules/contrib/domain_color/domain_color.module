@@ -1,0 +1,360 @@
+<?php
+
+use Drupal\Component\Utility\Bytes;
+use Drupal\Component\Utility\Environment;
+use Drupal\Core\Asset\AttachedAssetsInterface;
+use Drupal\Core\Asset\CssOptimizer;
+use Drupal\Core\File\Exception\FileException;
+use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function domain_color_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  if ($form_id == 'system_theme_settings') {
+    $color_module_submit_key = array_search('color_scheme_form_submit', $form['#submit']);
+    if ($color_module_submit_key !== FALSE) {
+      unset($form['#submit'][$color_module_submit_key]);
+      array_unshift($form['#submit'], 'domain_color_scheme_form_submit');
+    }
+    domain_color_scheme_form($form, $form_state, $form['color']['theme']['#value']);
+  }
+}
+
+/**
+ * Implements hook_color_module_implements_alter().
+ */
+function domain_color_module_implements_alter(&$implementations, $hook) {
+  // domain_color_form_system_theme_settings_alter() needs to run after
+  // color_form_system_theme_settings_alter().
+  if ($hook == 'form_alter') {
+    $group = $implementations['domain_color'];
+    unset($implementations['domain_color']);
+    $implementations['domain_color'] = $group;
+  }
+}
+
+/**
+ * Form submission handler for color_scheme_form().
+ */
+function domain_color_scheme_form_submit($form, FormStateInterface $form_state) {
+  // Avoid color settings spilling over to theme settings.
+  $color_settings = ['theme', 'palette', 'scheme'];
+  if ($form_state->hasValue('info')) {
+    $color_settings[] = 'info';
+  }
+  foreach ($color_settings as $setting_name) {
+    ${$setting_name} = $form_state->getValue($setting_name);
+    $form_state->unsetValue($setting_name);
+  }
+  if (!isset($info)) {
+    return;
+  }
+  $domain_id = \Drupal::service('domain.negotiator')->getActiveDomain()->id();
+  $config = \Drupal::configFactory()->getEditable('domain.config.' . $domain_id . '.color.theme.' . $theme);
+  // Set the original color configuration too to have something to override.
+  $original_config = \Drupal::configFactory()->getEditable('color.theme.' . $theme);
+  $original_config_is_unset = empty($original_config->getRawData());
+
+  // Resolve palette.
+  if ($scheme != '') {
+    foreach ($palette as $key => $color) {
+      if (isset($info['schemes'][$scheme]['colors'][$key])) {
+        $palette[$key] = $info['schemes'][$scheme]['colors'][$key];
+      }
+    }
+    $palette += $info['schemes']['default']['colors'];
+  }
+
+  // Make sure enough memory is available.
+  if (isset($info['base_image'])) {
+    // Fetch source image dimensions.
+    $source = drupal_get_path('theme', $theme) . '/' . $info['base_image'];
+    list($width, $height) = getimagesize($source);
+
+    // We need at least a copy of the source and a target buffer of the same
+    // size (both at 32bpp).
+    $required = $width * $height * 8;
+    // We intend to prevent color scheme changes if there isn't enough memory
+    // available.  memory_get_usage(TRUE) returns a more accurate number than
+    // memory_get_usage(), therefore we won't inadvertently reject a color
+    // scheme change based on a faulty memory calculation.
+    $usage = memory_get_usage(TRUE);
+    $memory_limit = ini_get('memory_limit');
+    $size = Bytes::toInt($memory_limit);
+    if (!Environment::checkMemoryLimit($usage + $required, $memory_limit)) {
+      \Drupal::messenger()->addError(t('There is not enough memory available to PHP to change this theme\'s color scheme. You need at least %size more. Check the <a href="http://php.net/manual/ini.core.php#ini.sect.resource-limits">PHP documentation</a> for more information.', ['%size' => format_size($usage + $required - $size)]));
+      return;
+    }
+  }
+
+  $file_system = \Drupal::service('file_system');
+  $files = $config->get('files');
+  // Check if we need to delete old files.
+  $remove = TRUE;
+  $themes = array_keys(\Drupal::service('theme_handler')->listInfo());
+  $domain_ids = \Drupal::entityTypeManager()->getStorage('domain')->getQuery()->execute();
+  if (isset($files)) {
+    foreach ($themes as $theme_to_check) {
+      foreach ($domain_ids as $domain_id_to_check) {
+        if ($theme_to_check === $theme && $domain_id_to_check === $domain_id) {
+          continue;
+        }
+        $files_to_check = \Drupal::configFactory()->getEditable('domain.config.' . $domain_id_to_check . '.color.theme.' . $theme_to_check)->get('files');
+        if ($files_to_check == $files) {
+          $remove  = FALSE;
+          break 2;
+        }
+      }
+      $files_to_check = \Drupal::configFactory()->getEditable('color.theme.' . $theme_to_check)->get('files');
+      if ($files_to_check == $files) {
+        $remove  = FALSE;
+        break;
+      }
+    }
+  }
+  else {
+    $remove = FALSE;
+  }
+
+  // Delete old files.
+  if ($remove) {
+    foreach ($files as $file) {
+      @$file_system->unlink($file);
+    }
+    if ($file = dirname($file)) {
+      @\Drupal::service('file_system')->rmdir($file);
+    }
+  }
+
+  // Prepare target locations for generated files.
+  $id = $theme . '-' . substr(hash('sha256', serialize($palette) . microtime()), 0, 8);
+  $paths['color'] = 'public://color';
+  $paths['target'] = $paths['color'] . '/' . $id;
+  /** @var \Drupal\Core\File\FileSystemInterface $file_system */
+  $file_system = \Drupal::service('file_system');
+  foreach ($paths as $path) {
+    $file_system->prepareDirectory($path, FileSystemInterface::CREATE_DIRECTORY);
+  }
+  $paths['target'] = $paths['target'] . '/';
+  $paths['id'] = $id;
+  $paths['source'] = drupal_get_path('theme', $theme) . '/';
+  $paths['files'] = $paths['map'] = [];
+
+  // Save palette and logo location.
+  $config
+    ->set('palette', $palette)
+    ->set('logo', $paths['target'] . 'logo.svg')
+    ->save();
+  if ($original_config_is_unset) {
+    $original_config
+      ->set('palette', $palette)
+      ->set('logo', $paths['target'] . 'logo.svg')
+      ->save();
+  }
+  // Copy over neutral images.
+  /** @var \Drupal\Core\File\FileSystemInterface $file_system */
+  $file_system = \Drupal::service('file_system');
+  foreach ($info['copy'] as $file) {
+    $base = $file_system->basename($file);
+    $source = $paths['source'] . $file;
+    try {
+      $filepath = $file_system->copy($source, $paths['target'] . $base);
+    }
+    catch (FileException $e) {
+      $filepath = FALSE;
+    }
+    $paths['map'][$file] = $base;
+    $paths['files'][] = $filepath;
+  }
+
+  // Render new images, if image has been provided.
+  if (isset($info['base_image'])) {
+    _color_render_images($theme, $info, $paths, $palette);
+  }
+
+  // Rewrite theme stylesheets.
+  $css = [];
+  foreach ($info['css'] as $stylesheet) {
+    // Build a temporary array with CSS files.
+    $files = [];
+    if (file_exists($paths['source'] . $stylesheet)) {
+      $files[] = $stylesheet;
+    }
+
+    foreach ($files as $file) {
+      $css_optimizer = new CssOptimizer();
+      // Aggregate @imports recursively for each configured top level CSS file
+      // without optimization. Aggregation and optimization will be
+      // handled by drupal_build_css_cache() only.
+      $style = $css_optimizer->loadFile($paths['source'] . $file, FALSE);
+
+      // Return the path to where this CSS file originated from, stripping
+      // off the name of the file at the end of the path.
+      $css_optimizer->rewriteFileURIBasePath = base_path() . dirname($paths['source'] . $file) . '/';
+
+      // Prefix all paths within this CSS file, ignoring absolute paths.
+      $style = preg_replace_callback('/url\([\'"]?(?![a-z]+:|\/+)([^\'")]+)[\'"]?\)/i', [$css_optimizer, 'rewriteFileURI'], $style);
+
+      // Rewrite stylesheet with new colors.
+      $style = _color_rewrite_stylesheet($theme, $info, $paths, $palette, $style);
+      $base_file = $file_system->basename($file);
+      $css[] = $paths['target'] . $base_file;
+      _color_save_stylesheet($paths['target'] . $base_file, $style, $paths);
+    }
+  }
+
+  // Maintain list of files.
+  $config
+    ->set('stylesheets', $css)
+    ->set('files', $paths['files'])
+    ->save();
+  if ($original_config_is_unset) {
+    $original_config
+      ->set('stylesheets', $css)
+      ->set('files', $paths['files'])
+      ->save();
+  }
+  \Drupal::service('library.discovery')->clearCachedDefinitions();
+}
+
+/**
+ * Form constructor for the color configuration form for a particular theme.
+ *
+ * @param $theme
+ *   The machine name of the theme whose color settings are being configured.
+ *
+ * @see color_scheme_form_validate()
+ * @see color_scheme_form_submit()
+ */
+function domain_color_scheme_form(&$form, FormStateInterface $form_state, $theme) {
+  $info = color_get_info($theme);
+
+  $info['schemes'][''] = ['title' => t('Custom'), 'colors' => []];
+  $schemes = [];
+  foreach ($info['schemes'] as $key => $scheme) {
+    $schemes[$key] = $scheme['colors'];
+    $schemes[$key] += $info['schemes']['default']['colors'];
+  }
+
+  // See if we're using a predefined scheme.
+  // Note: we use the original theme when the default scheme is chosen.
+  // Note: we use configuration without overrides since this information is used
+  // in a form and therefore without doing this would bleed overrides into
+  // active configuration. Furthermore, color configuration is used to write
+  // CSS to the file system making configuration overrides pointless.
+  $current_scheme = \Drupal::config('color.theme.' . $theme)->get('palette');
+  foreach ($schemes as $key => $scheme) {
+    if ($current_scheme == $scheme) {
+      $scheme_name = $key;
+      break;
+    }
+  }
+  if (empty($scheme_name)) {
+    if (empty($current_scheme)) {
+      $scheme_name = 'default';
+    }
+    else {
+      $scheme_name = '';
+    }
+  }
+
+  // Add scheme selector.
+  $default_palette = color_get_palette($theme, TRUE);
+  $form['color']['scheme']['#default_value'] = $scheme_name;
+
+  // Add palette fields. Use the configuration if available.
+  $palette = $current_scheme ?: $default_palette;
+  $names = $info['fields'];
+  foreach ($palette as $name => $value) {
+    if (isset($names[$name])) {
+      $form['color']['palette'][$name]['#default_value'] = $value;
+    }
+  }
+}
+
+/**
+ * Implements hook_library_info_build().
+ */
+function domain_color_library_info_build() {
+  $themes = array_keys(\Drupal::service('theme_handler')->listInfo());
+  $domain_ids = \Drupal::entityTypeManager()->getStorage('domain')->getQuery()->execute();
+  $libraries = [];
+  foreach ($themes as $theme) {
+    if (!color_get_info($theme)) {
+      continue;
+    }
+    foreach ($domain_ids as $domain_id) {
+      $stylesheets = \Drupal::config('domain.config.' . $domain_id . '.color.theme.' . $theme)->get('stylesheets');
+      // If this domain color has not been set yet we fall back to the
+      // original color setting.
+      if (!$stylesheets) {
+        $stylesheets = \Drupal::configFactory()->getEditable('color.theme.' . $theme)->get('stylesheets');
+      }
+      if ($stylesheets) {
+        $libraries['color.' . $theme . '.' . $domain_id] = [
+          'css' => [
+            'theme' => [
+              $stylesheets[0] => ['weight' => 1000, 'group' => CSS_AGGREGATE_THEME],
+            ],
+          ],
+        ];
+      }
+    }
+  }
+  return $libraries;
+}
+
+/**
+ * Implements hook_page_attachments().
+ *
+ * Attaches the appropriate color library to the page.
+ */
+function domain_color_page_attachments(array &$page) {
+  $active_theme = \Drupal::service('theme.manager')->getActiveTheme()->getName();
+  $domain_id = \Drupal::service('domain.negotiator')->getActiveDomain()->id();
+  $page['#attached']['library'][] = 'domain_color/color.' . $active_theme . '.' . $domain_id;
+}
+
+/**
+ * Implements hook_page_attachments_alter().
+ *
+ * Remove the active theme's color library.
+ */
+function domain_color_page_attachments_alter(array &$attachments) {
+  $active_theme = \Drupal::service('theme.manager')->getActiveTheme()->getName();
+  $active_theme_libraries = \Drupal::service('library.discovery')->getLibrariesByExtension($active_theme);
+  foreach ($active_theme_libraries as $name => $active_theme_library) {
+    if (in_array($active_theme . '/' . $name, $attachments['#attached']['library'])) {
+      if (isset($active_theme_library['css'])) {
+        foreach ($active_theme_library['css'] as $css_data) {
+          if (isset($css_data['type']) && $css_data['type'] == 'file' && isset($css_data['data']) &&
+              strpos($css_data['data'], 'public://color/' . $active_theme) === 0) {
+            $key = array_search($active_theme . '/' . $name, $attachments['#attached']['library']);
+            unset($attachments['#attached']['library'][$key]);
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_css_alter().
+ */
+function domain_color_css_alter(&$css, AttachedAssetsInterface $assets) {
+  // Our css needs to be loaded after the theme's style.css.
+  $css_paths = array_keys($css);
+  $color_css_paths = array_filter($css_paths, function ($css_path) {
+    if (strpos($css_path, 'public://color/') === 0) {
+      return TRUE;
+    }
+    return FALSE;
+  });
+  foreach ($color_css_paths as $color_css_path) {
+    // Use anything greater than 100 to have it load after the theme as
+    // CSS_AGGREGATE_THEME is set to 100.
+    $css[$color_css_path]['group'] = 300;
+  }
+}

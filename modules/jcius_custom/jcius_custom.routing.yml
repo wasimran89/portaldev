@@ -1,0 +1,38 @@
+jcius_custom.jcius_api_config_form:
+  path: '/admin/config/jcius_custom/apiconfig'
+  defaults:
+    _form: '\Drupal\jcius_custom\Form\JciusCustomApiConfigForm'
+    _title: 'SIMS Lineview Api Configuration'
+  requirements:
+    _permission: 'administer lineviewapi settings'
+  options:
+    _admin_route: TRUE
+    no_cache: TRUE
+jcius_custom.line_detail_view_config_form:
+  path: '/admin/config/jcius_custom/line-detail-config'
+  defaults:
+    _form: '\Drupal\jcius_custom\Form\JciusCustomLinedetailConfigForm'
+    _title: 'Row highlighting based on value Enabled Configuration'
+  requirements:
+    _permission: 'administer lineviewapi settings'
+  options:
+    _admin_route: TRUE
+    no_cache: TRUE
+
+
+jcius.add.user:
+  path: '/add/user'
+  defaults:
+    _title: 'Add User'
+    _controller: '\Drupal\jcius_custom\Controller\AddUserController::domainAdduser'
+  requirements:
+    _permission: 'access content'
+
+jcius_custom.log_copy_api_key:
+  path: '/log-copy-api-key'
+  defaults:
+    _controller: '\Drupal\jcius_custom\Controller\ApiKeyController::logCopy'
+    _title: 'Log API Key Copy'
+  requirements:
+    _access: 'TRUE'
+  methods: [POST]

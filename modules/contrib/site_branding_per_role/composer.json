@@ -1,0 +1,13 @@
+{
+    "name": "site_branding_per_role",
+    "type": "drupal-module",
+    "description": "Site branding configuation per role.",
+    "keywords": [
+    ],
+    "homepage": "https://www.drupal.org/project/site_branding_per_role",
+    "minimum-stability": "dev",
+    "support": {
+        "issues": "https://www.drupal.org/project/issues/site_branding_per_role",
+        "source": "http://cgit.drupalcode.org/site_branding_per_role"
+    }
+}

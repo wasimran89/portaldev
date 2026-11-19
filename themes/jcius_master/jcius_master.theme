@@ -1,0 +1,154 @@
+<?php
+
+/**
+ * @file
+ * Functions to support theming in the Jcius Master theme.
+ */
+use Drupal\file\Entity\File;
+use Drupal\group\Entity\GroupContent;
+/**
+ * Implements hook_preprocess_HOOK() for html.html.twig.
+ */
+function jcius_master_preprocess_html(&$variables) {
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for page.html.twig.
+ */
+function jcius_master_preprocess_page(&$variables) {
+	$current_user = \Drupal::currentUser(); //returns an AccountProxyInterface object and not a UserInterface object
+	//set variable for billing name on header
+	$user_display_name = $current_user->getEmail();
+	$session = \Drupal::request()->getSession();
+	if ($user_display_name) {
+		try{
+			\Drupal\Core\Database\Database::setActiveConnection();
+			$conn = \Drupal\Core\Database\Database::getConnection('default', 'third');
+			$query = $conn->query("select sim_partner_id from drupal_user where drupal_user= '".$user_display_name."'");
+			$result = $query->fetchAll();
+			if($result[0]->sim_partner_id){
+				$query2 = $conn->query("select partner_name from partner where partner_id=".$result[0]->sim_partner_id."");
+			    $result2 = $query2->fetchAll();
+				$variables['partner_name'] = $result2[0]->partner_name;
+				//themes/jcius_master/templates/layout/page.html.twig set
+				$session->set('current_partner_id',$result[0]->sim_partner_id);
+				$session->set('current_partner_name', $result2[0]->partner_name);
+			} else {
+				$session->set('current_partner_id','');
+				$session->set('current_partner_name', '');
+			}
+		} catch (Exception $e) {
+	    // If the connection fails, an exception will be thrown.
+	    // You can handle the exception as required, e.g., log an error, display a warning message, etc.
+	    watchdog_exception('mydata', $e);
+	  }	
+	}
+
+	$current_user_roles = $current_user->getRoles();	
+	if (!in_array('administrator', $current_user_roles)) {		
+		$user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id()); //current user load
+		if ($user) {
+			$usergroup = $user->field_group_type->getValue(); //current user group load
+			$usergroupid = $usergroup[0]['target_id']; //current user group id
+			$groupload = \Drupal\group\Entity\Group::load($usergroupid);
+			if (isset($groupload) && $groupload) {
+				$color_scheme = $groupload->get('field_color_scheme')->getValue();
+				$color_set = $groupload->get('field_color_set')->getValue();
+				$pc = $groupload->get('field_primary_color')->getValue();
+				$hbt = $groupload->get('field_header_background_top')->getValue();
+				$fb = $groupload->get('field_footer_background')->getValue();
+				$sc = $groupload->get('field_title_and_slogan')->getValue();
+				$tc = $groupload->get('field_text_color')->getValue();
+				$lc = $groupload->get('field_link_color')->getValue();
+				$lhc = $groupload->get('field_link_hover_color')->getValue();
+				$mhc = $groupload->get('field_menu_hover_background')->getValue();
+				//if color set
+				if (isset($color_set[0]['value']) && $color_set[0]['value'] == 1) { //custom radio button yes
+					$data = file_get_contents("/var/www/html/usim-webportal/themes/jcius_master/dist/css/predefined.css");
+					//header top,background, textcolor, link color, hover color, menu hover background,footer copyright,site branding
+
+					$primary_color = "#9d408d";
+					$header_background_top = "#aae2da";
+					$footer_backgound = "#847676";
+					$slogan_color = "#6e546e";
+					$text_color = "#3b3b3b";
+					$link_color = "#f81212";
+					$link_hover_color = "#df5a79";
+					$menu_hover_color = "#bca1a1";
+
+					$ogstring = [$header_background_top,$primary_color, $text_color, $link_color,$link_hover_color,$menu_hover_color,$footer_backgound,$slogan_color];
+					//print_r($ogstring);
+					$replacestring   = [$hbt[0]['color'],$pc[0]['color'], $tc[0]['color'], $lc[0]['color'], $lhc[0]['color'],$mhc[0]['color'],$fb[0]['color'],$sc[0]['color']];
+
+					$data = str_replace($ogstring, $replacestring, $data);
+					// do tag replacements or whatever you want
+					//$data = str_replace("#9d408d", "red", $data);
+
+					//save it back devportal (devlopemnt path)
+					file_put_contents("/var/www/html/usim-webportal/themes/jcius_master/dist/css/custom.css", $data);
+					$variables['#attached']['library'][] = 'jcius_master/custom';
+				} else { //predefined css then set 
+					if (!empty($color_scheme) && isset($color_scheme[0]['target_id']) && $color_scheme[0]['target_id'] == 41) { //ice taxonomy
+						// Attach the library you just created before in yout .theme file
+						$variables['#attached']['library'][] = 'jcius_master/ice';
+					    //$variables['#cache']['max-age'] = 0;
+					}
+					if (!empty($color_scheme) && isset($color_scheme[0]['target_id']) && $color_scheme[0]['target_id'] == 42) { //firehose taxonomy
+						// Attach the library you just created before in yout .theme file
+						$variables['#attached']['library'][] = 'jcius_master/firehouse';
+					    //$variables['#cache']['max-age'] = 0;
+					}
+					if (!empty($color_scheme) && isset($color_scheme[0]['target_id']) && $color_scheme[0]['target_id'] == 43) { //plum taxonomy
+						// Attach the library you just created before in yout .theme file
+						$variables['#attached']['library'][] = 'jcius_master/plum';
+					    //$variables['#cache']['max-age'] = 0;
+					}
+					if (!empty($color_scheme) && isset($color_scheme[0]['target_id']) && $color_scheme[0]['target_id'] == 44) { //slate taxonomy
+						// Attach the library you just created before in yout .theme file
+						$variables['#attached']['library'][] = 'jcius_master/grass';
+					    //$variables['#cache']['max-age'] = 0;
+					}
+				}
+			    $variables['#cache']['max-age'] = 0;
+				//if color set end			
+			} //groupload end
+		} //user			
+	} //end preprocess_page
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for node.html.twig.
+ */
+function jcius_master_preprocess_node(&$variables) {
+
+}
+
+function jcius_master_preprocess_block(&$variables) {
+  if ($variables['plugin_id'] == 'commerce_cart') {
+    if ($variables['content']['#count'] == 0) {
+      $variables['attributes']['class'][] = 'visually-hidden';
+    }
+  }
+
+  if ($variables['base_plugin_id'] == 'system_branding_block') {    
+    //group logo alter
+		$user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id()); //current user load
+		if ($user) {
+			$group = $user->field_group_type->getValue(); //current user group load
+			$type = $group[0]['target_id']; //current user group id
+			\Drupal\Core\Database\Database::setActiveConnection();
+			$conn = \Drupal\Core\Database\Database::getConnection('default', 'default');
+			$query = $conn->query("select field_group_logo_target_id from group__field_group_logo where entity_id= '".$type."'");
+			$result = $query->fetchAll();
+			if ($result) {
+				$file_object = File::load($result[0]->field_group_logo_target_id);
+			    // way 1
+			    $file_uri = $file_object->uri->value;
+			    $variables['site_logo'] = file_url_transform_relative(file_create_url($file_uri));
+			    $variables['#cache']['max-age'] = 0;
+			} else {
+				//Dont change anything if above condition not meet.			
+			}		
+		}
+  }
+}

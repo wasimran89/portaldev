@@ -1,0 +1,7 @@
+administer lineviewapi settings:
+  title: 'administer lineviewapi settings'
+  description: 'Permission to manage line view api settings'
+  restrict access: TRUE
+access meta tab:
+  title: 'Access meta tab'
+  description: 'Access meta information (author, creation date, boost information) in Meta vertical tab.'

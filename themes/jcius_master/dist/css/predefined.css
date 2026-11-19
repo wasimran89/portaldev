@@ -1,0 +1,203 @@
+/* ---------- Color Module Styles ----------- */
+
+body {
+  background: #9d408d !important; /*background color while loading*/
+  color: #3b3b3b !important;  /*text color*/
+}
+
+#page,
+#main-wrapper,
+.region-primary-menu .menu-item a.is-active,
+.region-primary-menu .menu-item--active-trail a {
+  background: #fff !important; /*Active menu background text color*/
+}
+.tabs ul.primary li a.is-active {
+  background-color: #fff !important;
+}
+.tabs ul.primary li.is-active a {
+  border-bottom-color: #fff !important;
+  background-color: #fff !important;
+}
+#header {
+  background-color: #1d84c3 !important;
+  background-image: -webkit-linear-gradient(top, #055a8e 0%, #1d84c3 100%);
+  background-image: linear-gradient(to bottom, #055a8e 0%, #1d84c3 100%);
+}
+.top-nav {
+    background: #aae2da !important;
+}
+h1 {
+  color: #9d408d !important; /*Secondary*/
+}
+
+.btn:hover, .node-readmore a:hover, .flexslider .more-link:hover, input[type="submit"]:hover {
+    background: #9d408d !important;
+    color: #fff !important;
+}
+.menu-base-theme li a:hover, .menu-base-theme li a:focus, .menu-base-theme li a:active, .menu-base-theme li a.highlighted {
+    background: #bca1a1 !important; /*Active menu background color*/
+    color: #fff !important; /*Active menu background text color*/
+}
+
+a,
+.link {
+  color: #f81212 !important; /*hyperlink color*/
+}
+
+th a, .link {
+    color: #fff !important;
+}
+a:hover,
+a:focus,
+.link:hover,
+.link:focus {
+  color: #df5a79 !important; /*on hover hyperlink color*/
+}
+a:active,
+.link:active {
+  color: #df5a79 !important; /*active hyperlink color*/
+}
+.sidebar .block {
+  border-color: #f9f9f9 !important;
+  background-color: #f6f6f2 !important;
+}
+.site-footer {
+  background: #292929 !important;
+}
+.copyright {
+    color: #eee; /*copyright footer text color*/
+    padding: 15px 0;
+    text-align: center;
+    background: #847676; /*copyright footer background color*/
+}
+.region-header,
+.region-header a,
+.region-header li a.is-active,
+.region-header .site-branding__text,
+.region-header .site-branding,
+.region-header .site-branding__text a,
+.region-header .site-branding a,
+.region-secondary-menu .menu-item a,
+.region-secondary-menu .menu-item a.is-active {
+  color: #6e546e !important; /*site branding text color*/
+}
+
+/* ---------- Color Form ----------- */
+
+[dir="rtl"] .color-form .color-palette {
+  margin-right: 20px !important;
+  margin-left: 0;
+}
+[dir="rtl"] .color-form .form-item label {
+  float: right !important;
+}
+[dir="rtl"] .color-form .color-palette .lock {
+  right: -20px;
+  left: 0;
+}
+/*input#edit-submit {
+    background: #9d408d !important;
+    color: #fff !important;
+}*/
+
+.export {
+    background: #dddddd !important; /*export button background color*/
+    color: black !important; /*export button background text color*/
+}
+.export:hover, .export:focus, .export:hover, .export:focus {
+    background: #9d408d !important; /*export button hover color*/
+    color: #fff !important; /*export button hover text color*/
+}
+.active a.is-active {
+    background: #f81212 !important; /*active and is active background color*/
+    color: #fff !important; /*active and is active background text color*/
+}
+ol li, ul li {
+    list-style: none;
+}
+/*
+.block.block-views.block-views-blockwho-s-online-who-s-online-block {
+  box-shadow: 4px 4px;
+  color: #9d408d !important;
+}
+
+.block.block-views.block-views-blockcompleted-orders-block-2 {
+  box-shadow: 4px 4px;
+  color: #9d408d !important;
+}
+
+.block.block-views.block-views-blockpending-orders-block-1 {
+  box-shadow: 4px 4px;
+  color: #9d408d !important;
+}
+
+.block.block-views.block-views-blocksubmited-orders-block-2 {
+  box-shadow: 4px 4px;
+  color: #9d408d !important;
+}
+.block.block-layout-builder.block-inline-blockbasic {
+box-shadow: 4px 4px;
+  color: #9d408d !important;
+}
+*/
+
+.svg-icon-simf svg {
+  fill: #9d408d !important;
+}
+.progress-title {
+  color: #9d408d !important;
+}
+li.checkout-progress--step.checkout-progress--step__current {
+    color: #9d408d !important;
+}
+li.checkout-progress--step.checkout-progress--step__next {
+    color: #9d408d !important;
+}
+#shipping-information-wrapper span.fieldset-legend {
+    color: #9d408d !important;
+}
+.layout-region h3 {
+    color: #9d408d !important;
+}
+li.checkout-progress--step.checkout-progress--step__previous {
+    color: #9d408d !important;
+}
+.button--add-to-cart {
+    background: #9d408d !important; /*Add to cart button background color*/
+    color: #fff !important; /*Add to cart button background text color*/
+}
+.dashboard-message th, .dashboard-quick-search th {
+    background: #9d408d !important;
+    color: #fff !important;
+}
+.path-mydata th {
+    background: #9d408d !important;
+    color: #fff !important;
+}
+#search-block-form input.form-submit:hover {
+    background-color: #00bceb;
+    border-color: #00bceb;
+    background: url('https://devportal.jcius.com/themes/graphics_zymphonies_theme/images/search.png') no-repeat center #9d408d !important;
+}
+.message {
+  background:url('https://devportal.jcius.com/Fidget-spinner.gif') center center no-repeat;
+}
+
+/**/
+th {
+    background: #9d408d !important;
+    color: #fff !important;
+}
+
+#search-block-form input.form-submit {
+    background: url('https://devportal.jcius.com/themes/graphics_zymphonies_theme/images/search.png') no-repeat center #9d408d;
+    font-size: 0;
+    width: 100%;
+    height: 35px;
+    padding: 0 20px;
+    vertical-align: top;
+    border-color: #00bceb;
+    -moz-border-radius: 0;
+    -webkit-border-radius: 0;
+    border-radius: 0;
+}

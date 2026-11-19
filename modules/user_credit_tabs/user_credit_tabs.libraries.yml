@@ -1,0 +1,10 @@
+user_credits:
+  version: 1.x
+  css:
+    theme:
+      css/user_credits.css: {}
+  js:
+    js/user_credits.js: {}
+  dependencies:
+    - core/jquery
+

@@ -1,0 +1,5 @@
+services:
+  last_visited_pages.recentplacessubscriber:
+    class: Drupal\last_visited_pages\LastVisitedPagesSubscriber
+    tags:
+      - { name: event_subscriber }

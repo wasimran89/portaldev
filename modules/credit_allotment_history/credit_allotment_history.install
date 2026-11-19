@@ -1,0 +1,57 @@
+<?php
+
+/**
+ * Implements hook_schema().
+ */
+function credit_allotment_history_schema() {
+  $schema['credit_allotment_history'] = [
+    'description' => 'Table to store Credit Allotment History.',
+    'fields' => [
+      'id' => [
+        'type' => 'serial',
+        'not null' => TRUE,
+        'description' => 'Primary Key: Unique log ID.',
+      ],
+      'from_partner_id' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'From partnerid',
+      ],
+      'to_partner_id' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'To partnerid',
+      ],
+      'operation_type' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'description' => 'Operation Type',
+      ],
+      'credit_amount' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'description' => 'Credit Amount',
+      ],
+      'remarks' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'description' => 'Remarks',
+      ],
+      'uid' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'User ID of the activity initiator.',
+      ],
+      'timestamp' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'Timestamp of the activity.',
+      ],
+    ],
+    'primary key' => ['id'],
+  ];
+  return $schema;
+}

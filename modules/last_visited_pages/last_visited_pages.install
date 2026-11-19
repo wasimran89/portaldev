@@ -1,0 +1,56 @@
+<?php
+
+/**
+ * Implements hook_schema().
+ */
+function last_visited_pages_schema() {
+  $schema['last_visited_pages'] = [
+    'description' => 'Stores last visited pages records',
+    'fields' => [
+      'id' => [
+        'type' => 'serial',
+        'not null' => TRUE,
+        'description' => 'Primary Key: Unique ID.',
+      ],
+      'title' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Last visited page title',
+      ],
+      'path' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Last visited page path',
+      ],
+      'ip_address' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Last visited page ip_address',
+      ],
+      'uid' => [
+        'description' => 'Last visited page uid',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'timestamp' => [
+        'description' => 'Last visited page created time.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+    ],
+    'primary key' => ['id'],
+    'indexes' => [
+      'id' => ['id']
+    ],
+  ];
+
+  return $schema;
+}

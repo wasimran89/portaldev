@@ -1,0 +1,4 @@
+credit_allotment_history.credit_allotment_history_page:
+  path: '/credit-allotment-history'
+  requirements:
+    _permission: 'administer site configuration'

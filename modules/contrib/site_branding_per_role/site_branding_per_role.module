@@ -1,0 +1,36 @@
+<?php
+
+/**
+ * @file
+ * Contains site_branding_per_role.module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function site_branding_per_role_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the site_branding_per_role module.
+    case 'help.page.site_branding_per_role':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Site branding configuation per role.') . '</p>';
+      return $output;
+
+    default:
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function site_branding_per_role_theme() {
+  return [
+    'site_branding_per_role_block' => [
+      'variables' => ['build' => NULL, 'link' => NULL],
+      'template' => 'block--site-branding-per-role-block',
+    ],
+  ];
+}

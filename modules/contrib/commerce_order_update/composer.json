@@ -1,0 +1,13 @@
+{
+    "name": "drupal/commerce_order_update",
+    "type": "drupal-module",
+    "description": "Provides ability to update commerce order(s) status via views bulk operations.",
+    "homepage": "https://drupal.org/project/commerce_order_update",
+    "license": "GPL-2.0+",
+    "require": {
+        "drupal/core": "^9.2 || ^10",
+        "drupal/commerce": "^2.29",
+        "drupal/commerce_order_label": "^1.0@RC"
+    },
+    "minimum-stability": "dev"
+}

@@ -1,0 +1,16 @@
+<?php
+
+/**
+ * @file
+ * Provides QR Activity Log module functionality.
+ */
+
+/**
+ * Implements hook_help().
+ */
+function qr_activity_log_help($route_name, \Drupal\Core\Routing\RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.qr_activity_log':
+      return '<p>' . t('The QR Activity Log module provides a custom table for logging QR code-related activities and makes it available in Views.') . '</p>';
+  }
+}

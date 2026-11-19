@@ -1,0 +1,23 @@
+services:
+  mydata.external_database:
+    class: Drupal\Core\Database\Connection
+    factory: 'Drupal\Core\Database\Database::getConnection'
+    arguments: ['default','third']
+parameters:
+  filter_protocols:
+    - http
+    - https
+    - ftp
+    - news
+    - nntp
+    - tel
+    - telnet
+    - mailto
+    - irc
+    - ssh
+    - sftp
+    - webcal
+    - rtsp
+    - data
+    - URI
+    - MIME

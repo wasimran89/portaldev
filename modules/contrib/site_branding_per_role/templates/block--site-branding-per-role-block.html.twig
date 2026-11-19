@@ -1,0 +1,30 @@
+{% extends "block.html.twig" %}
+{#
+/**
+ * Available variables:
+ * - build.site_logo: Logo for site as defined in Appearance or theme settings.
+ * - build.site_name: Name for site as defined in Site information settings.
+ * - build.site_slogan: Slogan for site as defined in Site information settings.
+ * - link: Path for current user role.
+ */
+#}
+{% set attributes = attributes.addClass('site-branding') %}
+{% block content %}
+  {% if build.site_logo %}
+    <a href="{{ link }}" rel="home" class="site-branding__logo">
+      {{ build.site_logo }}
+    </a>
+  {% endif %}
+  {% if build.site_name or build.site_slogan %}
+    <div class="site-branding__text">
+      {% if build.site_name %}
+        <div class="site-branding__name">
+          <a href="{{ link }}" title="{{ 'Home'|t }}" rel="home">{{ build.site_name }}</a>
+        </div>
+      {% endif %}
+      {% if build.site_slogan %}
+        <div class="site-branding__slogan">{{ build.site_slogan }}</div>
+      {% endif %}
+    </div>
+  {% endif %}
+{% endblock %}

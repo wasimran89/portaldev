@@ -1,0 +1,3013 @@
+<?php
+/**
+ * @file
+ * Contains jcius_custom.module.
+ */
+use Drupal\views\ViewExecutable;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\file\Entity\File;
+use Drupal\Core\Url;
+use Drupal\user\Entity\User;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\commerce_product\Entity\Product;
+use Drupal\Core\Database\Database;
+use Drupal\webform\Entity\WebformOptions;
+use Drupal\group\Entity\Group;
+use Drupal\commerce_order\Entity\OrderInterface;
+use Drupal\profile\Entity\Profile;
+use Drupal\views\Plugin\views\query\QueryPluginBase;
+use Drupal\Core\Render\Markup;
+/**
+ * Implements hook_views_pre_render().
+ */
+function jcius_custom_views_pre_render(ViewExecutable $view) {
+   $view->element['#attached']['library'][] = 'bartik/classy.dropbutton';
+   $view->element['#attached']['library'][] = 'jcius_custom/lineview_libraries';
+   if ($view->id() == 'completed_orders' && $view->current_display == "block_1") {
+      $view_result = $view->result;
+      if (empty($view_result)) {
+         $view->result = 0;
+      }
+   }
+}
+
+function jcius_custom_validate(&$form, $form_state) {
+   $mail = $form_state->getValue('mail');
+   // Validate email
+   if (filter_var($mail, FILTER_VALIDATE_EMAIL)) {
+      echo $mail . " is a valid email address";
+   } else {
+      $form_state->setErrorByName('mail', 'Email is invalid!');
+   }
+}
+
+// Function to fetch related partners recursively
+function fetchRelatedPartners($parentId, &$all_related_partners) {
+   $conn = \Drupal\Core\Database\Database::getConnection('default', 'third');
+   // Start building the query on the external database connection
+   $query = $conn->select('partner', 'p');
+
+   // Specify the field to retrieve (partner_id)
+   $query->fields('p', ['partner_id']);
+
+   // Add the OR condition for parent_partner_id and grand_parent_partner_id
+   $orGroup = $query->orConditionGroup()
+                     ->condition('p.parent_partner_id', $parentId, '=')
+                     ->condition('p.grand_parent_partner_id', $parentId, '=');
+
+   // Add the OR condition group to the main query
+   $query->condition($orGroup);
+
+   // Execute the query and fetch all results
+   $results = $query->execute()->fetchAll();
+
+   // Loop through each result and add to the array
+   foreach ($results as $partner) {
+      if (!in_array($partner->partner_id, $all_related_partners)) {
+         $all_related_partners[] = $partner->partner_id;
+         // Recursively call this function for further relationships
+         fetchRelatedPartners($partner->partner_id, $all_related_partners);
+      }
+   }
+}
+
+function mapRelatedPartnerswithGrouptype($all_related_partners, &$group_ids) {
+   $conn = \Drupal\Core\Database\Database::getConnection('default', 'third');
+   $arp = implode(',', $all_related_partners);
+   $queryp = $conn->query("SELECT partner_id, partner_name FROM partner WHERE partner_id IN ($arp)");
+   $resultp = $queryp->fetchAll();
+   $partner_name = [];
+   foreach ($resultp as $keyp => $datap) {
+      $partner_name[$datap->partner_name] = $datap->partner_id;
+   }
+
+   //partner name with partner_id from partner table
+   //print_r($partner_name);
+
+   $group_ids = []; // Array to store matching group IDs
+   $groups = Group::loadMultiple();
+
+   //maping in group list in drupal application
+   foreach ($groups as $group) {
+      $id = $group->id(); 
+      $label = trim($group->label());
+
+      // Check if the label exists as a key in the partner_name array
+      if (isset($partner_name[$label])) {
+         $group_ids[$label] = $id; // Store the matching group ID
+      }
+   }
+   //drupal group type id
+   //print_r($group_ids);
+}
+
+function mapRelatedPartnerswithGrouptypeforsimprofile($all_related_partners, &$group_ids) {
+   $conn = \Drupal\Core\Database\Database::getConnection('default', 'third');
+   $arp = implode(',', $all_related_partners);
+   $queryp = $conn->query("SELECT partner_id, partner_name FROM partner WHERE partner_id IN ($arp)");
+   $resultp = $queryp->fetchAll();
+   $partner_name = [];
+   foreach ($resultp as $keyp => $datap) {
+      $partner_name[$datap->partner_name] = $datap->partner_id;
+   }
+
+   //partner name with partner_id from partner table
+   //print_r($partner_name);
+
+   $group_ids = []; // Array to store matching group IDs
+   $groups = Group::loadMultiple();
+
+   //maping in group list in drupal application
+   foreach ($groups as $group) {
+      $id = $group->id(); 
+      $label = trim($group->label());
+
+      // Check if the label exists as a key in the partner_name array
+      if (isset($partner_name[$label])) {
+         $group_ids[$id] = $label; // Store the matching group ID
+      }
+   }
+   //drupal group type id
+   //print_r($group_ids);
+}
+
+
+
+/**
+ * Implementation Hook_form_alter
+ *
+ */
+function jcius_custom_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+   if ($form_id === 'commerce_checkout_flow_multistep_default') {
+      if (!empty($form['shipping_information'])) {
+         // Add custom validation for the phone number.
+         $form['#validate'][] = 'jcius_custom_validate_phone_number';
+      }
+   }
+   //webform rest api need predefined option thats why need to add dyamic value in partner_name predifined option.
+   if ($form_id == 'webform_options_edit_form') {
+      $options = WebformOptions::load('partner_name'); //predifined option
+      $conn = \Drupal::database();
+      $partner_name= [];
+      $querypartner = $conn->query("select id, label from groups_field_data");
+      $resultspart = $querypartner->fetchAll();
+      foreach ($resultspart as $keypart => $valuepart) {
+        $partner_name[$valuepart->id] = $valuepart->label;
+      }
+
+
+      if ($options && $partner_name) {
+        // Get the existing options.
+        //$predefined_options = $options->getOptions();
+
+        $options->setOptions($partner_name);
+        
+        // Save the updated options list.
+        $options->save();
+
+        \Drupal::logger('jcius_custom')->notice('Updated options for partner_name: ' . print_r($partner_name, TRUE));
+      }
+      else {
+        \Drupal::logger('jcius_custom')->error('Could not load Webform options for partner_name.');
+      }
+   }
+
+   //Email validation
+   if ($form_id == 'user_register_form') {
+      $form['#validate'][] = 'jcius_custom_validate';
+   }
+
+   //Simprofile
+   if ($form_id == 'webform_submission_sim_profile_node_10_edit_form') {
+      $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());  
+      $roles = $user->getRoles(); 
+      $session = \Drupal::request()->getSession();
+      $conn = \Drupal\Core\Database\Database::getConnection('default', 'third');
+      //partner name start
+      if (isset($form["elements"]["step_1_profile_name"]["partner_name"]))
+      {
+        $resultpartner = [];        
+         if (in_array('administrator', $roles)) {
+           $querypartner = $conn->query("select partner_id, partner_name from partner order by partner_name");
+           $resultspart = $querypartner->fetchAll();
+           foreach ($resultspart as $keypart => $valuepart) {
+             //$resultpartner[$valuepart->partner_id] = $valuepart->partner_name;
+             $resultpartner[] = $valuepart->partner_id;
+           }
+           mapRelatedPartnerswithGrouptypeforsimprofile($resultpartner, $group_ids);
+           $form["elements"]["step_1_profile_name"]["partner_name"]["#options"] = $group_ids;
+         } else {
+            //If Partner has child then add child
+            if ($session->get('current_partner_id')) { //if partner assign
+               $all_related_partners = [];
+               fetchRelatedPartners($session->get('current_partner_id'), $all_related_partners);
+               $all_related_partners[] = $session->get('current_partner_id');
+               /*
+               $partners_list = implode(',', array_map('intval', $all_related_partners));
+
+               // Build the query dynamically
+               $querypid = $conn->query("
+               SELECT partner_id, partner_name 
+               FROM partner 
+               WHERE partner_id in  ($partners_list)"
+               );
+
+               $resultpid = $querypid->fetchAll();
+               $partner_pid = [];
+               foreach ($resultpid as $keypid => $datapid) {
+                  //$partner_pid[$session->get('current_partner_id')] = $session->get('current_partner_name');
+                  $partner_pid[$datapid->partner_id] = $datapid->partner_name;
+               }
+               */
+
+               mapRelatedPartnerswithGrouptypeforsimprofile($all_related_partners, $group_ids);
+               $form["elements"]["step_1_profile_name"]["partner_name"]["#options"] = $group_ids;
+            } //if
+         } //else
+      } 
+      //partner name end
+
+      //Choose imsi range start
+      if (isset($form["elements"]["step_2_home_network"]['choose_imsi_range']['#element']['range']))
+      {
+         if (in_array('administrator', $roles)) {
+            $result = [];
+            $query = $conn->query("select imsi_range_name from imsi_range");
+            $results = $query->fetchAll();
+            foreach ($results as $key => $value) {
+               $result[$value->imsi_range_name] = $value->imsi_range_name;
+            }
+            $form["elements"]["step_2_home_network"]['choose_imsi_range']['#element']['range']['#options'] = $result;
+         } else {
+            if ($session->get('current_partner_id')) { //if partner assigned
+              $result = [];
+              $query = $conn->query("select imsi_range_name from imsi_range where partner_id = '".$session->get('current_partner_id')."'");
+              $results = $query->fetchAll();
+              foreach ($results as $key => $value) {
+                $result[$value->imsi_range_name] = $value->imsi_range_name;
+              }
+              $form["elements"]["step_2_home_network"]['choose_imsi_range']['#element']['range']['#options'] = $result;
+            } //if
+         }         
+      } //if
+      //Choose imsi range end
+   }  //webform_submission_sim_profile_node_10_edit_form
+
+   if ($form_id == 'webform_submission_sim_profile_node_10_add_form') {
+      $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());  
+      $roles = $user->getRoles();
+      $session = \Drupal::request()->getSession();
+      $conn = \Drupal\Core\Database\Database::getConnection('default', 'third');
+      //partner name
+      if (isset($form["elements"]["step_1_profile_name"]["partner_name"]))
+      {
+        $resultpartner = [];        
+         if (in_array('administrator', $roles)) {
+           $partner_pid = [];
+           $querypartner = $conn->query("select partner_id, partner_name from partner order by partner_name");
+           $resultspart = $querypartner->fetchAll();
+           foreach ($resultspart as $keypart => $valuepart) {
+             //$resultpartner[$valuepart->partner_id] = $valuepart->partner_name;
+             $resultpartner[] = $valuepart->partner_id;
+           }
+           mapRelatedPartnerswithGrouptypeforsimprofile($resultpartner, $group_ids);
+           $form["elements"]["step_1_profile_name"]["partner_name"]["#options"] = $group_ids;
+         } else {
+            //if child
+            if ($session->get('current_partner_id')) { //if partner assign
+               $all_related_partners = [];
+               fetchRelatedPartners($session->get('current_partner_id'), $all_related_partners);
+               $all_related_partners[] = $session->get('current_partner_id');
+               /*
+               $partners_list = implode(',', array_map('intval', $all_related_partners));
+
+               // Build the query dynamically
+               $querypid = $conn->query("
+                           SELECT partner_id, partner_name 
+                           FROM partner 
+                           WHERE partner_id in  ($partners_list)"
+                           );
+
+               $resultpid = $querypid->fetchAll();
+               $partner_pid = [];
+               foreach ($resultpid as $keypid => $datapid) {
+                  $partner_pid[$datapid->partner_id] = $datapid->partner_name;
+               }
+               */
+               mapRelatedPartnerswithGrouptypeforsimprofile($all_related_partners, $group_ids);
+
+               $form["elements"]["step_1_profile_name"]["partner_name"]["#options"] = $group_ids;
+            }
+         }
+      }
+      //SIM profile IMSI Range
+      if (isset($form["elements"]["step_2_home_network"]['choose_imsi_range']['#element']['range'])) {  
+         if (in_array('administrator', $roles)) {
+            $result = [];
+            $query = $conn->query("select imsi_range_name from imsi_range");
+            $results = $query->fetchAll();
+            foreach ($results as $key => $value) {
+               $result[$value->imsi_range_name] = $value->imsi_range_name;
+            }
+            $form["elements"]["step_2_home_network"]['choose_imsi_range']['#element']['range']['#options'] = $result;
+         } else {
+            if($session->get('current_partner_id')) {
+              $result = [];
+              $query = $conn->query("select imsi_range_name from imsi_range where partner_id = '".$session->get('current_partner_id')."'");
+              $results = $query->fetchAll();
+              foreach ($results as $key => $value) {
+                $result[$value->imsi_range_name] = $value->imsi_range_name;
+              }
+              $form["elements"]["step_2_home_network"]['choose_imsi_range']['#element']['range']['#options'] = $result;
+            }
+         }         
+      }
+      //end SIM profile IMSI Range
+   } //webform_submission_sim_profile_node_10_add_form
+
+   if ($form_id == 'commerce_checkout_flow_multistep_default') {
+    $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+    $paymentType = $user->get('field_payment_type')->getValue();
+    $array_payment = [];
+    foreach ($paymentType as $key => $value) {
+       $array_payment[] = $value['target_id'];
+    }      
+ 
+
+    if((in_array('39', $array_payment)) && (in_array('40', $array_payment))) {
+     // 
+    }
+    if((in_array('39', $array_payment)) && (!in_array('40', $array_payment))) {
+      //cc selected not manual
+      $form['payment_information']['payment_method']['offline']['#access'] = FALSE; //offline id
+      $form['payment_information']['payment_method']['new--credit_card--authorize_net']['#required'] = TRUE;
+      $form['payment_information']['add_payment_method']['#access'] = TRUE; //creditcard details
+    }
+    if((!in_array('39', $array_payment)) && (in_array('40', $array_payment))) {
+     //manual selected not cc
+      $form['payment_information']['payment_method']['new--credit_card--authorize_net']['#access'] = FALSE; //credit card id
+      $form['payment_information']['payment_method']['offline']['#required'] = TRUE;
+      $form['payment_information']['add_payment_method']['#access'] = FALSE; //creditcard details
+    }
+   } //commerce_checkout_flow_multistep_default
+
+   //group type field hide
+   if ($form_id == 'user_register_form') {     
+      $form['account']['name']['#access'] = FALSE; //username hide and usernmae replace with email in email_registration module
+      $form['field_tier_type']['#access'] = FALSE;
+      $form['field_esim_tier_type']['#access'] = FALSE;
+      $form['field_18_slot_tier_type']['#access'] = FALSE;
+      $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());    
+      $roles = $user->getRoles();      
+      $group = $user->get('field_group_type')->getValue();
+      $paymentType = $user->get('field_payment_type')->getValue();
+      $type = $group[0]['target_id'];
+
+      $session = \Drupal::request()->getSession();
+      $conn = \Drupal\Core\Database\Database::getConnection('default', 'third');
+
+      //parent child start
+      if ($session->get('current_partner_id')) {
+         $all_related_partners = [];
+         fetchRelatedPartners($session->get('current_partner_id'), $all_related_partners);
+         $all_related_partners[] = $session->get('current_partner_id');
+         $partners_list = implode(',', array_map('intval', $all_related_partners));      
+
+         // Build the query dynamically
+         $querypid = $conn->query("
+         SELECT partner_id, partner_name 
+         FROM partner 
+         WHERE partner_id in  ($partners_list)"
+         );
+
+         $resultpid = $querypid->fetchAll();      
+
+         $child = []; // Initialize an empty array
+
+         foreach ($form['field_group_type']['widget']['#options'] as $key => $value) {
+             // Check if $datapid->partner_name matches $value
+             foreach ($resultpid as $datapid) {
+                 if (trim(strtolower($datapid->partner_name)) == trim(strtolower($value))) {
+                     // If a match is found, store the data as key => value in $child
+                     $child[$key] = $value;
+                 }
+             }
+         }
+      }
+      //parent child end
+
+      if(in_array('esim_admin', $roles)){
+         /*
+         foreach ($form['field_group_type']['widget']['#options'] as $key => $value) {
+            if($key == $type){
+               $form['field_group_type']['widget']['#options'] = [$key=>$value];
+            }
+         }*/
+
+         $form['field_group_type']['widget']['#options'] = $child;
+
+         //payment details for esim_admin
+         foreach ($paymentType as $key2 => $value2) {
+           if($value2['target_id'] == 39){ //creditcard taxonomyterm
+               $form['field_payment_type']['widget']['#default_value'] = ['0'=>'39'];
+               $form['field_payment_type']['#disabled'] = TRUE;
+            }
+            if($value2['target_id'] == 40){ //manual taxonomyterm
+               $form['field_payment_type']['widget']['#default_value'] = ['1'=>'40'];
+               $form['field_payment_type']['#disabled'] = TRUE;
+            }
+         }
+         //end payment details for esim_admin
+
+         $form['field_company_name']['#access'] = FALSE;
+         //$form['account']['name']['#type'] = 'hidden';
+         $form['user_picture']['#access'] = FALSE;
+         $form['field_hear_about_us']['#access'] = FALSE;
+         $form['language']['#access'] = FALSE;
+         $form['contact']['#access'] = FALSE;
+         $form['timezone']['#access'] = FALSE;
+         //$form['account']['roles'] = FALSE;
+         //$form['account']['status'] = FALSE;
+         $form['field_tier_type']['#access'] = FALSE;
+         $form['field_esim_tier_type']['#access'] = FALSE;
+         $form['field_18_slot_tier_type']['#access'] = FALSE;
+         //$form['account']['mail']['#attributes'] = array('readonly' => 'readonly');
+
+         // Remove administrator from options
+         foreach ($form['account']['roles']['#options'] as $key => $value) {
+            if ($value == 'Administrator') {
+               unset($form['account']['roles']['#options'][$key]); //Administrator option hide
+            }
+            if ($value == 'Authenticated user') {
+               unset($form['account']['roles']['#options'][$key]); //Administrator option hide
+            }
+            if ($value == 'TAMU_ADMIN') {
+               unset($form['account']['roles']['#options'][$key]); //Administrator option hide
+            }
+            if ($value == 'TAMU_HSS') {
+               unset($form['account']['roles']['#options'][$key]); //Administrator option hide
+            }
+            if ($value == 'eSIM') {
+               unset($form['account']['roles']['#options'][$key]); //Administrator option hide
+            }
+            if ($value == 'Billing Entity') {
+               unset($form['account']['roles']['#options'][$key]); //Administrator option hide
+            }
+            if ($value == 'Oss') {
+               unset($form['account']['roles']['#options'][$key]); //Administrator option hide
+            }
+            if ($value == 'Usim') {
+               unset($form['account']['roles']['#options'][$key]); //Administrator option hide
+            }
+            if ($value == 'ESIM/USIM Administrator') {
+               unset($form['account']['roles']['#options'][$key]); 
+            }
+            if ($value == 'eSIM Dashboard Readonly') {
+               unset($form['account']['roles']['#options'][$key]); 
+            }
+         }
+      }
+   } //user_register_form
+
+   if ($form_id == 'user_form') {
+      //Edit user check start(user management)
+      $current_user = User::load(\Drupal::currentUser()->id());
+
+      if ($current_user) {
+         //grand parent, parent, child logic start
+         $session = \Drupal::request()->getSession();
+         if ($session->get('current_partner_id')) {
+            $all_related_partners = [];
+            fetchRelatedPartners($session->get('current_partner_id'), $all_related_partners);
+            $all_related_partners[] = $session->get('current_partner_id');
+
+            //parent and grand parent id from current user sim_partner_id
+            //print_r($all_related_partners);
+
+            mapRelatedPartnerswithGrouptype($all_related_partners, $group_ids);
+            //drupal group type id
+            //print_r($group_ids);            
+         }            
+         //grand parent, parent, child logic end
+
+         //esim_admin
+         if (!in_array('administrator', $current_user->getRoles()) && in_array('esim_admin', $current_user->getRoles()) && ($ruser = \Drupal::routeMatch()->getParameter('user')) instanceof User) {
+
+             // Check if the loaded user has the 'administrator' role.
+             if (in_array('administrator', $ruser->getRoles())) {
+                 throw new AccessDeniedHttpException();
+             }            
+
+             if (in_array('esim_admin', $ruser->getRoles())) {
+               //only access parent child group type else access denied 
+               if (is_array($group_ids) && !in_array($ruser->get('field_group_type')->target_id, $group_ids)) {
+                 throw new AccessDeniedHttpException();
+               }
+             }
+
+             if (in_array('esim_cs', $ruser->getRoles())) {
+               //only access parent child group type else access denied
+               if (is_array($group_ids) && !in_array($ruser->get('field_group_type')->target_id, $group_ids)) {
+                 throw new AccessDeniedHttpException();
+               }
+             }
+         }
+
+         //usim_admin
+         if (!in_array('administrator', $current_user->getRoles()) && in_array('usim_admin', $current_user->getRoles()) && ($ruser = \Drupal::routeMatch()->getParameter('user')) instanceof User) {
+
+             // Check if the loaded user has the 'administrator' role.
+             if (in_array('administrator', $ruser->getRoles())) {
+                 throw new AccessDeniedHttpException();
+             }
+
+             if (in_array('usim_admin', $ruser->getRoles())) {
+               //only access parent child group type else access denied
+               if (is_array($group_ids) && !in_array($ruser->get('field_group_type')->target_id, $group_ids)) {
+                 throw new AccessDeniedHttpException();
+               }
+             }
+
+             if (in_array('usim_cs', $ruser->getRoles())) {
+               //only access parent child group type else access denied
+               if (is_array($group_ids) && !in_array($ruser->get('field_group_type')->target_id, $group_ids)) {
+                 throw new AccessDeniedHttpException();
+               }
+             }
+         }        
+      }
+      //Edit user check end
+
+      $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());    
+      $roles = $user->getRoles();      
+      $group = $user->get('field_group_type')->getValue();
+      $paymentType = $user->get('field_payment_type')->getValue();
+      $type = $group[0]['target_id'];
+
+      $session = \Drupal::request()->getSession();
+      $conn = \Drupal\Core\Database\Database::getConnection('default', 'third');
+
+      //parent child start
+      if ($session->get('current_partner_id')) {
+         $all_related_partners = [];
+         fetchRelatedPartners($session->get('current_partner_id'), $all_related_partners);
+         $all_related_partners[] = $session->get('current_partner_id');
+         $partners_list = implode(',', array_map('intval', $all_related_partners));      
+
+         // Build the query dynamically
+         $querypid = $conn->query("
+         SELECT partner_id, partner_name 
+         FROM partner 
+         WHERE partner_id in  ($partners_list)"
+         );
+
+         $resultpid = $querypid->fetchAll();      
+
+         $child = []; // Initialize an empty array
+
+         foreach ($form['field_group_type']['widget']['#options'] as $key => $value) {
+             // Check if $datapid->partner_name matches $value
+             foreach ($resultpid as $datapid) {
+                 if (trim(strtolower($datapid->partner_name)) == trim(strtolower($value))) {
+                     // If a match is found, store the data as key => value in $child
+                     $child[$key] = $value;
+                 }
+             }
+         }
+      }
+      //parent child end
+
+      if (in_array('administrator', $roles)) {
+         //
+      } 
+      elseif(in_array('esim_admin', $roles)){
+         /*
+         foreach ($form['field_group_type']['widget']['#options'] as $key => $value) {
+            if($key == $type){
+               $form['field_group_type']['widget']['#options'] = [$key=>$value];
+            }
+         }
+         */
+         $form['field_group_type']['widget']['#options'] = $child;
+
+         //payment details for esim_admin
+         foreach ($paymentType as $key2 => $value2) {
+           if($value2['target_id'] == 39){ //creditcard taxonomyterm
+               $form['field_payment_type']['widget']['#default_value'] = ['0'=>'39'];
+               $form['field_payment_type']['#disabled'] = TRUE;
+            }
+            if($value2['target_id'] == 40){ //manual taxonomyterm
+               $form['field_payment_type']['widget']['#default_value'] = ['1'=>'40'];
+               $form['field_payment_type']['#disabled'] = TRUE;
+            }
+         }
+         //end payment details for esim_admin
+
+         $form['field_company_name']['#access'] = FALSE;
+         $form['user_picture']['#access'] = FALSE;
+         $form['field_hear_about_us']['#access'] = FALSE;
+         $form['language']['#access'] = FALSE;
+         $form['contact']['#access'] = FALSE;
+         $form['timezone']['#access'] = FALSE;
+         //$form['account']['status'] = FALSE;
+         //$form['field_tier_type']['#access'] = FALSE;
+         $form['field_esim_tier_type']['#access'] = FALSE;
+         $form['account']['field_esim_tier_type']['#attributes'] = array('readonly' => 'readonly');
+         $form['field_18_slot_tier_type']['#access'] = FALSE;
+         $form['account']['mail']['#attributes'] = array('readonly' => 'readonly');
+
+         // Remove administrator from options
+         foreach ($form['account']['roles']['#options'] as $key => $value) {
+            if ($value == 'Administrator') {
+               unset($form['account']['roles']['#options'][$key]);
+            }              
+            if ($value == 'Usim') {
+               unset($form['account']['roles']['#options'][$key]);
+            }               
+            if ($value == 'ESIM/USIM Administrator') {
+               unset($form['account']['roles']['#options'][$key]); 
+            }
+            if ($value == 'eSIM Dashboard Readonly') {
+               unset($form['account']['roles']['#options'][$key]); //eSIM Dashboard Readonly option hide
+            }
+         }
+      }
+      else {
+         $form['field_group_type']['#access'] = FALSE; //group type hide
+         $form['field_company_name']['#access'] = FALSE;
+         //$form['account']['name']['#type'] = 'hidden';
+         $form['user_picture']['#access'] = FALSE;
+         $form['field_hear_about_us']['#access'] = FALSE;
+         $form['language']['#access'] = FALSE;
+         $form['contact']['#access'] = FALSE;
+         $form['timezone']['#access'] = FALSE;
+         $form['account']['roles'] = FALSE;
+         $form['account']['status'] = FALSE;
+         $form['field_tier_type']['#access'] = FALSE;
+         $form['field_esim_tier_type']['#access'] = FALSE;
+         $form['field_18_slot_tier_type']['#access'] = FALSE;
+         $form['account']['mail']['#attributes'] = array('readonly' => 'readonly');
+         // Remove administrator from options
+         foreach ($form['account']['roles']['#options'] as $key => $value) {
+            if ($value == 'Administrator') {
+               unset($form['account']['roles']['#options'][$key]); //Administrator option hide
+            }
+            if ($value == 'Authenticated user') {
+               unset($form['account']['roles']['#options'][$key]); //Administrator option hide
+            }
+            if ($value == 'eSIM Dashboard Readonly') {
+               unset($form['account']['roles']['#options'][$key]); //eSIM Dashboard Readonly option hide
+            }
+         }
+      }
+
+      //$form['field_esim_tier_type']['#access'] = FALSE;
+      $form['field_esim_tier_type']['#disabled'] = TRUE;
+      //$form['field_esim_tier_type']['#value'] = $form['field_esim_tier_type']['#default_value'];
+      $form['field_3_slot_tier_type']['#disabled'] = TRUE;
+      $form['field_overlay_sim_tier_type']['#disabled'] = TRUE;
+      $form['field_esim_reset_tier_type']['#disabled'] = TRUE;
+      $form['field_esim_release_tier_type']['#disabled'] = TRUE;
+
+   } //user_form
+
+   //sim profile product(Dont delete warning!!!)
+   if ($form_id == 'commerce_order_item_add_to_cart_form_commerce_product_7') {
+      $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id()); //current user load
+      if ($user) {
+         $group = $user->field_group_type->getValue(); //current user group load
+         $type = $group[0]['target_id']; //current user group id
+         //echo "Current user group type:" . $type;
+      }
+      // Find records in database for the webform submission of sim profile by group id
+      $select = \Drupal::service('database')
+         ->select('webform_submission_data', 'wsd')
+         ->fields('wsd', array('sid'))
+         ->orderBy('wsd.sid', 'DESC')
+         ->condition('wsd.webform_id', 'sim_profile', '=') //webform id of sim profile
+         //->condition('wsd.name', 'group_type', '=')
+         ->condition('wsd.name', 'partner_name', '=')
+         ->condition('wsd.value', $type, '=') //passing gorup id of the current user
+         ->execute();
+      $results = $select->fetchAll(\PDO::FETCH_COLUMN);
+      $simprofilesubmission = [];
+      foreach ($results as $result) {
+         // Fetch or load records of extracted submission Id
+         if ($result) {
+            $sid = $result;
+            $submission = \Drupal\webform\Entity\WebformSubmission::load($sid);
+            $submission_data = $submission->getData();
+            $simprofilesubmission[] = $submission_data['sim_profile_name']; //sim profile of group user by sim_profile_name
+         }
+      }
+      $productvarition = $form["purchased_entity"]["widget"][0]["attributes"]["attribute_sim_profile"]["#options"];
+      $resultd = array_diff($productvarition, $simprofilesubmission); //difference check product variation and sim profile of current user by group
+      foreach ($resultd as $res) {
+         foreach ($form["purchased_entity"]["widget"][0]["attributes"]["attribute_sim_profile"]["#options"] as $key => $value) {
+            if (trim($value) == trim($res)) { //remove space ifany by trim function
+               unset($form["purchased_entity"]["widget"][0]["attributes"]["attribute_sim_profile"]["#options"][$key]); //TAMU_SEC_HIGH option hide
+            }
+         }
+      }
+      //loaded current group users uids from current user group type id
+      $userStorage = \Drupal::entityTypeManager()->getStorage('user');
+      $query = $userStorage->getQuery();
+      $uids = $query
+         ->condition('status', '1')
+         ->condition('field_group_type', $type)
+         ->execute();
+      $uid = implode(', ', $uids);
+      if ($uid) {
+         $table = 'commerce_order'; //group user orders
+         $table2 = 'commerce_order_item'; //group user orders items
+         $database = \Drupal::database();
+         $query = $database->query("SELECT * FROM {$table} where uid in ({$uid}) and state='completed'");
+         $result = $query->fetchAll();
+         $results = [];
+         foreach ($result as $key => $value) {
+            $query2 = $database->query("SELECT * FROM {$table2} where order_id = {$value->order_id}");
+            $result2 = $query2->fetchAll();
+            foreach ($result2 as $key2 => $value2) {
+               $variation = substr($value2->title, strpos($value2->title, ","));
+               $results[] = trim($variation);
+            }
+         }
+      }
+      $form['#attached']['library'][] = 'jcius_custom/lineview_libraries';
+      $form['#attached']['drupalSettings']['jcius_custom']['variable'] = $results;
+      $form["quantity"]['#access'] = FALSE;
+      $form["field_sim_profile"]["widget"][0]["value"]["#access"] = FALSE;
+   }
+   //prdouct 7 end
+
+    //profiltype added
+    if ($form_id == 'commerce_order_item_add_to_cart_form_commerce_product_8') {
+      $profile_type = isset($_GET['profile_type']) ? $_GET['profile_type'] : '';
+      $group_id = isset($_GET['group_id']) ? $_GET['group_id'] : '';
+
+      $form['profile_type'] = [
+         '#type' => 'select',
+         '#title' => t('Profile Type'),
+         '#default_value' => $profile_type ? '/product/8?profile_type='.$profile_type.'&group_id='.$group_id : '',
+         '#required' => TRUE,
+         '#options' => [
+            ''=>'Choose Profile',
+            '/product/8?profile_type=1&group_id='.$group_id=> '1 Profile', 
+            /*'/product/8?profile_type=2&group_id='.$group_id=> '2 Profile', 
+            '/product/8?profile_type=3&group_id='.$group_id=> '3 Profile'*/
+         ]
+      ];
+
+      //custom login for partner name start
+      $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());  
+      $roles = $user->getRoles(); 
+      $session = \Drupal::request()->getSession();
+      $conn = \Drupal\Core\Database\Database::getConnection('default', 'third');
+      if (in_array('administrator', $roles)) {
+         $querypartner = $conn->query("select partner_id, partner_name from partner order by partner_name");
+           $resultspart = $querypartner->fetchAll();
+           foreach ($resultspart as $keypart => $valuepart) {
+             //$resultpartner[$valuepart->partner_id] = $valuepart->partner_name;
+             $resultpartner[] = $valuepart->partner_id;
+           }
+           mapRelatedPartnerswithGrouptypeforsimprofile($resultpartner, $group_ids);
+      } else {
+         if ($session->get('current_partner_id')) { //if partner assign
+            $all_related_partners = [];
+            fetchRelatedPartners($session->get('current_partner_id'), $all_related_partners);
+            $all_related_partners[] = $session->get('current_partner_id');
+            mapRelatedPartnerswithGrouptypeforsimprofile($all_related_partners, $group_ids);
+         }
+      }
+
+      if ($group_ids) {
+         $partner =[];
+         $profile_type = isset($_GET['profile_type']) ? $_GET['profile_type'] : null; 
+         foreach($group_ids as $key => $value){
+            $partner['/product/8?profile_type=' . $profile_type . '&group_id=' . $key] = $value;
+         }
+      }
+
+      $form['partner_name'] = [
+         '#type' => 'select',
+         '#title' => t('Partner Name'),
+         '#default_value' => isset($_GET['group_id']) ? '/product/8?profile_type='.$_GET['profile_type'].'&group_id='.$_GET['group_id'] : '',
+         '#required' => TRUE,
+         '#attributes' => [
+              'class' => ['catalog-partner-name'],
+          ],
+         '#options' => ['' => t('Choose Partner')] + $partner,
+      ];
+      //custom login for partner name end
+
+      $form['#attached']['library'][] = 'jcius_custom/lineview_libraries';
+    }
+    if ($form_id == 'commerce_order_item_add_to_cart_form_commerce_product_10') {
+      $profile_type = isset($_GET['profile_type']) ? $_GET['profile_type'] : '';
+      $group_id = isset($_GET['group_id']) ? $_GET['group_id'] : '';
+
+      $form['profile_type'] = [
+         '#type' => 'select',
+         '#title' => t('Profile Type'),
+         '#default_value' => $profile_type ? '/product/10?profile_type='.$profile_type.'&group_id='.$group_id : '',
+         '#required' => TRUE,
+         '#options' => [
+            ''=>'Choose Profile',
+            '/product/10?profile_type=1&group_id='.$group_id => '1 Profile', 
+            '/product/10?profile_type=2&group_id='.$group_id => '2 Profile', 
+            '/product/10?profile_type=3&group_id='.$group_id => '3 Profile'
+         ]
+      ];
+
+      //custom login for partner name start
+      $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());  
+      $roles = $user->getRoles(); 
+      $session = \Drupal::request()->getSession();
+      $conn = \Drupal\Core\Database\Database::getConnection('default', 'third');
+      if (in_array('administrator', $roles)) {
+         $querypartner = $conn->query("select partner_id, partner_name from partner order by partner_name");
+           $resultspart = $querypartner->fetchAll();
+           foreach ($resultspart as $keypart => $valuepart) {
+             //$resultpartner[$valuepart->partner_id] = $valuepart->partner_name;
+             $resultpartner[] = $valuepart->partner_id;
+           }
+           mapRelatedPartnerswithGrouptypeforsimprofile($resultpartner, $group_ids);
+      } else {
+         if ($session->get('current_partner_id')) { //if partner assign
+            $all_related_partners = [];
+            fetchRelatedPartners($session->get('current_partner_id'), $all_related_partners);
+            $all_related_partners[] = $session->get('current_partner_id');
+            mapRelatedPartnerswithGrouptypeforsimprofile($all_related_partners, $group_ids);
+         }
+      }
+
+      if ($group_ids) {
+         $partner =[];
+         $profile_type = isset($_GET['profile_type']) ? $_GET['profile_type'] : null;
+         foreach($group_ids as $key => $value){
+            $partner['/product/10?profile_type=' . $profile_type . '&group_id=' . $key] = $value;
+         }
+      }
+
+      $form['partner_name'] = [
+         '#type' => 'select',
+         '#title' => t('Partner Name'),
+         '#default_value' => isset($_GET['group_id']) ? '/product/10?profile_type='.$_GET['profile_type'].'&group_id='.$_GET['group_id'] : '',
+         '#required' => TRUE,
+         '#attributes' => [
+              'class' => ['catalog-partner-name'],
+          ],
+         '#options' => ['' => t('Choose Partner')] + $partner,
+      ];
+      //custom login for partner name end
+
+      $form['#attached']['library'][] = 'jcius_custom/lineview_libraries';
+    }
+    if ($form_id == 'commerce_order_item_add_to_cart_form_commerce_product_13') {
+      $profile_type = isset($_GET['profile_type']) ? $_GET['profile_type'] : '';
+      $group_id = isset($_GET['group_id']) ? $_GET['group_id'] : '';
+      $form['profile_type'] = [
+         '#type' => 'select',
+         '#title' => t('Profile Type'),
+         '#default_value' => $profile_type ? '/product/13?profile_type='.$profile_type.'&group_id='.$group_id : '',
+         '#required' => TRUE,
+         '#options' => [
+            ''=>'Choose Profile',
+            '/product/13?profile_type=1&group_id='.$group_id => '1 Profile', 
+            '/product/13?profile_type=2&group_id='.$group_id => '2 Profile', 
+            '/product/13?profile_type=3&group_id='.$group_id => '3 Profile'
+         ]
+      ];
+
+      //custom login for partner name start
+      $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());  
+      $roles = $user->getRoles(); 
+      $session = \Drupal::request()->getSession();
+      $conn = \Drupal\Core\Database\Database::getConnection('default', 'third');
+      if (in_array('administrator', $roles)) {
+         $querypartner = $conn->query("select partner_id, partner_name from partner order by partner_name");
+           $resultspart = $querypartner->fetchAll();
+           foreach ($resultspart as $keypart => $valuepart) {
+             //$resultpartner[$valuepart->partner_id] = $valuepart->partner_name;
+             $resultpartner[] = $valuepart->partner_id;
+           }
+           mapRelatedPartnerswithGrouptypeforsimprofile($resultpartner, $group_ids);
+      } else {
+         if ($session->get('current_partner_id')) { //if partner assign
+            $all_related_partners = [];
+            fetchRelatedPartners($session->get('current_partner_id'), $all_related_partners);
+            $all_related_partners[] = $session->get('current_partner_id');
+            mapRelatedPartnerswithGrouptypeforsimprofile($all_related_partners, $group_ids);
+         }
+      }
+
+      if ($group_ids) {
+         $partner =[];
+         $profile_type = isset($_GET['profile_type']) ? $_GET['profile_type'] : null;
+         foreach($group_ids as $key => $value){
+            $partner['/product/13?profile_type=' . $profile_type . '&group_id=' . $key] = $value;
+         }
+      }
+
+      $form['partner_name'] = [
+         '#type' => 'select',
+         '#title' => t('Partner Name'),
+         '#default_value' => isset($_GET['group_id']) ? '/product/13?profile_type='.$_GET['profile_type'].'&group_id='.$_GET['group_id'] : '',
+         '#required' => TRUE,
+         '#attributes' => [
+              'class' => ['catalog-partner-name'],
+          ],
+         '#options' => ['' => t('Choose Partner')] + $partner,
+      ];
+      //custom login for partner name end
+
+      $form['#attached']['library'][] = 'jcius_custom/lineview_libraries';
+    }
+    //profiltype added end
+}
+
+function jcius_custom_mail_alter(&$message) {
+   $message['body'][0] = str_replace("http://", "https://", $message['body'][0]);
+}
+
+function jcius_custom_form_views_form_commerce_cart_form_default_alter(&$form, &$form_state) {
+   $form['actions']['empty_cart'] = [
+      '#type' => 'button',
+      '#value' => t('Empty cart'),
+      '#empty_cart_button' => TRUE,
+      '#attributes' => [
+         'class' => ['empty-cart-button'],
+      ],
+   ];
+}
+
+function jcius_custom_webform_submission_delete($submission) {
+   // Get an array of the values from the submission.
+   if ($submission) {
+      $values = $submission->getData();
+      $simprofilename = $values['sim_profile_name'];
+      //$grouptype = $values['group_type'];
+      $grouptype = $values['partner_name'];
+      $product = \Drupal\commerce_product\Entity\Product::load('7');
+      /*Load Product Variations*/
+      $entity_manager = \Drupal::entityTypeManager();
+      $variations = $product->getVariations();
+
+      foreach ($variations as $variation) {
+         $productgrouptype = $variation->get('field_group_id')->value;
+         $title = $variation->getTitle();
+         if (($grouptype == $productgrouptype) && ($simprofilename == $title)) {
+            $variation_id = $variation->get('variation_id')->value;
+            $product_variation = \Drupal\commerce_product\Entity\ProductVariation::load($variation_id);
+            $product->removeVariation($product_variation);
+            $product->save();
+            \Drupal::messenger()->addStatus(t('Variation deleted!'));
+            //for attribute delete
+            $table = 'commerce_product_attribute_value_field_data';
+            $database = \Drupal::database();
+            $query = $database->query("DELETE FROM `{$table}` WHERE `name`= '{$title}'");
+            $result = $query->execute();
+            \Drupal::messenger()->addStatus(t('Product attributed deleted!!!'));
+            $table2 = 'commerce_product_variation_field_data';
+            $query2 = $database->query("DELETE FROM `{$table2}` WHERE `title`= '{$title}'");
+            $result2 = $query2->execute();
+            \Drupal::messenger()->addStatus(t('Product variation field deleted!!!'));
+         }
+      }
+
+      $userStorage = \Drupal::entityTypeManager()->getStorage('user');
+      $query = $userStorage->getQuery();
+      $current_user = \Drupal::currentUser();
+      $uid = $current_user->id();
+      $table = 'commerce_order';
+      $table2 = 'commerce_order_item';
+      $database = \Drupal::database();
+      $query = $database->query("SELECT * FROM {$table} where uid in ({$uid}) and state='completed'");
+      $result = $query->fetchAll();
+      $results = [];
+      foreach ($result as $key => $value) {
+         //flag=1 deleted record
+         $query2 = $database->query("UPDATE `{$table2}` SET `flag` = '1' WHERE `order_id` = '{$value->order_id}' and `title` = '{$simprofilename}'");
+         $result2 = $query2->execute();
+         if ($result2) {
+            \Drupal::messenger()->addStatus(t('Flag updated!!!'));
+         }
+      }
+   } //submision of webform
+}
+
+function jcius_custom_commerce_product_variation_presave(Drupal\Core\Entity\EntityInterface $entity) {
+   //SIM profile product variation plublish change webform profile status approve and vice versa
+   // Check if the entity type is commerce_product_variation.
+   if ($entity->getEntityTypeId() === 'commerce_product_variation') {
+    // Get the product entity.
+    $product = $entity->getProduct();
+    // Check if the product type is 'product_type_machine_name'.
+    if ($product && $product->bundle() === 'sim_profile') {
+      $title = $entity->getTitle();
+      $group_id = $entity->get('field_group_id')->value;
+      $connection = Database::getConnection();
+
+      $query = $connection->select('webform_submission_data', 'wsd1');
+      $query->distinct()
+           ->fields('wsd1', ['sid'])
+           ->condition('wsd1.name', 'sim_profile_name')
+           ->condition('wsd1.value', $title);
+
+      $query->join('webform_submission_data', 'wsd2', 'wsd1.sid = wsd2.sid');
+      //$query->condition('wsd2.name', 'group_type');
+      $query->condition('wsd2.name', 'partner_name');
+      $query->condition('wsd2.value', $group_id);
+
+      $results = $query->execute()->fetchAll();
+
+      // Check if the product variation is published.
+      if ($entity->status->value == 1) {    
+         if ($results) {
+            $query2 = $connection->update('webform_submission_data');
+            $query2->fields(['value' => 'Approved']);
+            $query2->condition('sid', $results[0]->sid);
+            $query2->condition('name', 'profile_status');
+            $query2->execute();
+            //hide for now
+            //\Drupal::messenger()->addMessage($title.' SIM profile has been approved.');
+         } else {
+            \Drupal::messenger()->addWarning('No matching record found for webform submission data: '.$title);
+         }
+      } else {
+         if ($results) {
+            $query2 = $connection->update('webform_submission_data');
+            $query2->fields(['value' => 'Pending']);
+            $query2->condition('sid', $results[0]->sid);
+            $query2->condition('name', 'profile_status');
+            $query2->execute();
+            \Drupal::messenger()->addMessage($title.' SIM profile has been pending.');
+         } else {
+            \Drupal::messenger()->addWarning('No matching record found for webform submission data: '.$title);
+         }
+      }
+    }
+  }
+}
+
+function jcius_custom_emtpy_cart_when_partner_changed() {
+   //Cart Start
+   $cart_provider = \Drupal::service('commerce_cart.cart_provider');
+   // Get all carts for the current user.
+   $carts = $cart_provider->getCarts($user);
+   $cart_is_empty = true; // Assume the cart is empty initially.
+
+   if (!empty($carts)) {
+       foreach ($carts as $cart) {
+           // Check if the cart has any order items.
+           $items = $cart->getItems(); // Get items as an array.
+           if (!empty($items)) {
+               $cart_is_empty = false; // The cart is not empty.
+               break;
+           }
+       }
+   }
+
+   if ($cart_is_empty) {
+       //\Drupal::messenger()->addMessage('The cart is empty.');
+   } else {
+      //\Drupal::messenger()->addMessage('The cart contains items.');
+      foreach ($carts as $cart) {
+        $cart_items = $cart->getItems();
+        foreach ($cart_items as $item) {
+          // Get the purchased entity (product variation) from the cart item.
+          $product_variation = $item->getPurchasedEntity();
+
+          // Ensure the purchased entity exists and the field is available.
+          if ($product_variation && $product_variation->hasField('field_group_id')) {
+              // Safely retrieve the value of the 'field_group_id' field.
+              $group_type_id = $product_variation->get('field_group_id')->value;
+           }
+          if (isset($group_type_id) && $_GET['group_id'] != $group_type_id) {
+            $cart->removeItem($item);
+            \Drupal::messenger()->addWarning(t('Your previous cart is getting overridden because the partner name has been changed.'));
+          }
+        }
+
+        // Save the cart after removing items.
+        $cart->save();
+      }
+   }
+   //Cart End
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for the product add to cart form.
+ */
+function jcius_custom_form_commerce_order_item_add_to_cart_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+ //16, 17 are credit product so not included others are here
+ if($form_id != 'commerce_order_item_add_to_cart_form_commerce_product_16' && $form_id != 'commerce_order_item_add_to_cart_form_commerce_product_17') {
+   //IMSI Range
+   $imsiresult = [];
+   $session = \Drupal::request()->getSession();
+   $conn = \Drupal\Core\Database\Database::getConnection('default', 'third');
+   $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());  
+   $roles = $user->getRoles();  
+
+   if (in_array('administrator', $roles)) {
+      if (!empty($_GET['group_id'])) {
+         $groups = \Drupal\group\Entity\Group::loadMultiple();
+         $group_id = $_GET['group_id'];
+         $group_label = '';
+
+         // Mapping in group list in Drupal application
+         foreach ($groups as $group) {
+           if ($group->id() == $group_id) {
+               $group_label = trim($group->label());
+               break;
+           }
+         }
+
+         // Fetch partner_id if a group label is matched
+         if (!empty($group_label)) {
+           $cqueryp = $conn->query("SELECT partner_id FROM {partner} WHERE partner_name = :group_label", [':group_label' => $group_label]);
+           $cresultp = $cqueryp->fetchAll();
+
+           if (!empty($cresultp)) {
+               $partner_id = $cresultp[0]->partner_id;
+           }
+         }
+         // Fetch IMSI range names associated with the resolved partner_id
+         $queryimsi = $conn->select('imsi_range', 'i');
+         $queryimsi->fields('i', ['imsi_range_name']);
+         $queryimsi->condition('partner_id', $partner_id);      
+      } else {
+         $queryimsi = $conn->select('imsi_range', 'i');
+         $queryimsi->fields('i', ['imsi_range_name']);
+      }
+   } else {
+      $partner_id = $session->get('current_partner_id');
+
+      // Check if group_id is provided and not empty, then override the partner_id
+      if (!empty($_GET['group_id'])) {
+          $groups = \Drupal\group\Entity\Group::loadMultiple();
+          $group_id = $_GET['group_id'];
+          $group_label = '';
+
+          // Mapping in group list in Drupal application
+          foreach ($groups as $group) {
+              if ($group->id() == $group_id) {
+                  $group_label = trim($group->label());
+                  break;
+              }
+          }
+
+          // Fetch partner_id if a group label is matched
+          if (!empty($group_label)) {
+              $cqueryp = $conn->query("SELECT partner_id FROM {partner} WHERE partner_name = :group_label", [':group_label' => $group_label]);
+              $cresultp = $cqueryp->fetchAll();
+
+              if (!empty($cresultp)) {
+                  $partner_id = $cresultp[0]->partner_id;
+              }
+          }
+      }
+
+      // Fetch IMSI range names associated with the resolved partner_id
+      $queryimsi = $conn->select('imsi_range', 'i');
+      $queryimsi->fields('i', ['imsi_range_name']);
+      $queryimsi->condition('partner_id', $partner_id);
+   }
+
+   $imsiresults = $queryimsi->execute()->fetchAll();
+
+   foreach ($imsiresults as $imsivalue) {
+       $imsiresult[$imsivalue->imsi_range_name] = $imsivalue->imsi_range_name;
+   }
+
+
+   $form['imsi_range_custom'] = [
+      '#type' => 'select',
+      '#title' => t('IMSI Range'),
+      '#default_value' => 'None',
+      '#required' => TRUE,
+      '#weight' =>1,
+      '#options' => ['' => t('Choose IMSI Range')] + $imsiresult,
+      '#wrapper_attributes' => [
+             'class' => ['custom-imsi-range-wrapper']
+         ]
+   ];
+
+   if (!$imsiresult) {
+      $addnewimsirangeurl   = Url::fromUserInput('/mydata/form/mydata2?table=imsi_range');
+      $form['new_imsi_range'] = [
+         '#type' => 'link',
+         '#title' => 'Add New IMSI Range',
+         '#prefix' => '<div class="custom-imsi-range-wrapper">',
+         '#suffix' => '</div>',
+         '#weight' =>1,
+         '#url' => $addnewimsirangeurl,
+         '#attributes' => [
+             'target' => '_self',
+             'class' => '',
+             'title' => t("Add New IMSI Range"),
+         ],
+       ];
+   }  
+   //IMSI Range end
+
+   //slot1
+   //simprofile1
+   if (isset($_GET['profile_type']) && $_GET['profile_type'] == 1) {
+      $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id()); //current user load
+      if ($user) {
+         $group = $user->field_group_type->getValue(); //current user group load
+         $type = $group[0]['target_id']; //current user group id
+         //if partner name dropdown value select
+         if ($_GET['group_id']) {
+            $type = $_GET['group_id'];
+         }
+         /*
+         $tier = $user->field_tier_type->getValue();
+         if (!empty($tier) && isset($tier[0]['target_id'])) {
+           $term = \Drupal\taxonomy\Entity\Term::load($tier[0]['target_id']);
+           $tier_name = $term->getName();            
+             $form['price-tier'] = [
+                '#prefix' => t('Tier : ').t($tier_name),
+                '#weight' => 90,
+             ];
+         }
+         */      
+      }
+
+      //jcius_custom.js flag
+      if (isset($_COOKIE['flag1']) && $_COOKIE['flag1'] == 1) {
+         //Clear previous cart when partner changed
+         jcius_custom_emtpy_cart_when_partner_changed();
+         //$parameter = \Drupal::routeMatch()->getParameter('commerce_product');
+         $product = \Drupal\commerce_product\Entity\Product::load('7');
+         /*Load Product Variations*/
+         $entity_manager = \Drupal::entityTypeManager();
+         $variations = $product->getVariations();
+         foreach ($variations as $variation) {
+            $sku = $variation->getSku();
+            $title = $variation->getTitle();
+            $id = $variation->get('variation_id')->value;
+            $status = $variation->get('status')->value;
+            $grouptype = $variation->get('field_group_id')->value;
+            //echo "grouptype:".$grouptype;
+            if (($type == $grouptype) && ($title == $_COOKIE['simprofile1']) && ($status == '1')) {
+               $variation_id = $variation->get('variation_id')->value;
+               $store_id = 1;
+               $order_type = 'default'; // If you have several order types, specify one here.
+               $entity_manager = \Drupal::entityTypeManager();
+               $cart_manager = \Drupal::service('commerce_cart.cart_manager');
+               $cart_provider = \Drupal::service('commerce_cart.cart_provider');
+
+               // Following line is the same as Drupal\commerce_store\Entity\Store::load($store_id);
+               $store = $entity_manager->getStorage('commerce_store')->load($store_id);
+               $product_variation = $entity_manager->getStorage('commerce_product_variation')->load($variation_id);
+               // This is special: We must know if there is already a cart for the provided
+               // order type and store:
+               $cart = $cart_provider->getCart($order_type, $store);
+               if ($cart) {
+                  $matching_cart_variation_id = [];
+                  foreach ($cart->getItems() as $order_item) {
+                     $product_variation = $order_item->getPurchasedEntity();
+                     $cart_variation_id = $product_variation->get('variation_id')->value;
+                     if ($cart_variation_id == $variation_id) {
+                        $matching_cart_variation_id[] = $cart_variation_id;
+                     }
+                  }
+
+                  if ($matching_cart_variation_id) {
+                     $qnty = 0;
+                  } else {
+                     $qnty = 1;
+                  }
+               } else {
+                  $qnty = 1;
+               }
+
+               if (!$cart) {
+                  $cart = $cart_provider->createCart($order_type, $store);
+               }
+
+               $order_item_option_2 = $entity_manager->getStorage('commerce_order_item')->create([
+                  'type' => 'default', // Also, Commerce 2.x have a feature to define custom "line item types".
+                  'purchased_entity' => (string) $variation_id,
+                  'quantity' => $qnty, // Amount or quantity to be added to the cart.
+                  'unit_price' => $product_variation->getPrice(),
+               ]);
+               $order_item_option_2->save();
+               $cart_manager->addOrderItem($cart, $order_item_option_2);
+
+               \Drupal::messenger()->addStatus(t('Product added to the cart.'));
+               setrawcookie('flag1', 0);
+               setcookie("flag1", 0);
+               unset($_COOKIE['flag1']);
+               setcookie('flag1', '', time() - 3600, '/'); // empty value and old timestamp
+            } //if end
+
+            //if 2 start
+            if (($type == $grouptype) && ($title . '(Purchased)' == $_COOKIE['simprofile1']) && ($status == '1')) {
+               $variation_id = $variation->get('variation_id')->value;
+               $price = new \Drupal\commerce_price\Price('0', 'USD');
+               $product_variation = \Drupal\commerce_product\Entity\ProductVariation::load($variation_id);
+               $product_variation->set('price', $price);
+               $product_variation->save();
+               //
+               $store_id = 1;
+               $order_type = 'default'; // If you have several order types, specify one here.
+               $entity_manager = \Drupal::entityTypeManager();
+               $cart_manager = \Drupal::service('commerce_cart.cart_manager');
+               $cart_provider = \Drupal::service('commerce_cart.cart_provider');
+
+               // Following line is the same as Drupal\commerce_store\Entity\Store::load($store_id);
+               $store = $entity_manager->getStorage('commerce_store')->load($store_id);
+               $product_variation = $entity_manager->getStorage('commerce_product_variation')->load($variation_id);
+               // This is special: We must know if there is already a cart for the provided
+               // order type and store:
+               $cart = $cart_provider->getCart($order_type, $store);
+               if ($cart) {
+                  $matching_cart_variation_id2 = [];
+                  foreach ($cart->getItems() as $order_item) {
+                     $product_variation = $order_item->getPurchasedEntity();
+                     $cart_variation_id = $product_variation->get('variation_id')->value;
+                     if ($cart_variation_id == $variation_id) {
+                        $matching_cart_variation_id2[] = $cart_variation_id;
+                     }
+
+                  }
+                  if ($matching_cart_variation_id2) {
+                     $qnty = 0;
+                  } else {
+                     $qnty = 1;
+                  }
+               } else {
+                  $qnty = 1;
+               }
+
+               if (!$cart) {
+                  $cart = $cart_provider->createCart($order_type, $store);
+               }
+
+               $order_item_option_2 = $entity_manager->getStorage('commerce_order_item')->create([
+                  'type' => 'default', // Also, Commerce 2.x have a feature to define custom "line item types".
+                  'purchased_entity' => (string) $variation_id,
+                  'quantity' => $qnty, // Amount or quantity to be added to the cart.
+                  'unit_price' => $product_variation->getPrice(),
+               ]);
+               $order_item_option_2->save();
+               $cart_manager->addOrderItem($cart, $order_item_option_2);
+               \Drupal::messenger()->addStatus(t('Product added to the cart.'));
+               setrawcookie('flag1', 0);
+               setcookie("flag1", 0);
+               unset($_COOKIE['flag1']);
+               setcookie('flag1', '', time() - 3600, '/'); // empty value and old timestamp
+            } //if2 end
+         }
+      }
+
+      $select = \Drupal::service('database')
+         ->select('webform_submission_data', 'wsd')
+         ->fields('wsd', array('sid'))
+         ->orderBy('wsd.sid', 'DESC')
+         ->condition('wsd.webform_id', 'sim_profile', '=') //webform id
+         //->condition('wsd.name', 'group_type', '=')
+         ->condition('wsd.name', 'partner_name', '=')
+         ->condition('wsd.value', $type, '=') //passing gorup id of the current user
+         ->execute();
+      $results = $select->fetchAll(\PDO::FETCH_COLUMN);
+      $simprofilesubmission = [];
+      foreach ($results as $result) {
+         // Fetch or load records of extracted submission Id
+         if ($result) {
+            $sid = $result;
+            $submission = \Drupal\webform\Entity\WebformSubmission::load($sid);
+            if($submission){
+               $submission_data = $submission->getData();
+               $simprofilesubmission[] = trim($submission_data['sim_profile_name']); //sim profile groupby user
+            }
+         }
+      }
+
+      //loaded current group user from current user group
+      $userStorage = \Drupal::entityTypeManager()->getStorage('user');
+      $query = $userStorage->getQuery();
+      $uids = $query
+         ->condition('status', '1')
+         ->condition('field_group_type', $type)
+         ->execute();
+      $uid = implode(', ', $uids);
+      if ($uid) {
+         $table = 'commerce_order';
+         $table2 = 'commerce_order_item';
+         $database = \Drupal::database();
+         $query = $database->query("SELECT * FROM {$table} where uid in ({$uid}) and state='completed'");
+         $result = $query->fetchAll();
+         $results = [];
+         foreach ($result as $key => $value) {
+            $query2 = $database->query("SELECT * FROM {$table2} where order_id = {$value->order_id} and `flag` = '0'");
+            $result2 = $query2->fetchAll();
+            foreach ($result2 as $key2 => $value2) {
+               $variation = substr($value2->title, strpos($value2->title, ","));
+               $results[] = trim($variation);
+            }
+         }
+      }
+
+      $form['#attached']['library'][] = 'jcius_custom/lineview_libraries';
+      $form['#attached']['drupalSettings']['jcius_custom']['variable1'] = $results;
+      $allvariation = [];
+      $parameter = \Drupal::routeMatch()->getParameter('commerce_product');
+      $product = \Drupal\commerce_product\Entity\Product::load('7');
+      /*Load Product Variations*/
+      $entity_manager = \Drupal::entityTypeManager();
+      $variations = $product->getVariations();
+
+      $current_product_id = \Drupal::routeMatch()->getParameter('commerce_product')->id();
+      if ($current_product_id == '8') { //product id =8 esim product
+         foreach ($variations as $variation) {
+            $grouptype = $variation->get('field_group_id')->value;
+            $profiletype = $variation->get('field_profile_type')->value;
+            $status = $variation->get('status')->value;
+            if (($type == $grouptype) && ('eSIM' == $profiletype) && ($status == 1)) {
+               $allvariation[] = trim($variation->getTitle());
+            }
+         }
+      } else {
+         foreach ($variations as $variation) {
+            $grouptype = $variation->get('field_group_id')->value;
+            $profiletype = $variation->get('field_profile_type')->value;
+            $status = $variation->get('status')->value;
+            if (($type == $grouptype) && ('eSIM' != $profiletype) && ($status == 1)) {
+               $allvariation[] = trim($variation->getTitle());
+            }
+         }
+      }
+      
+      $resultsimandvariation = array_intersect($allvariation, $simprofilesubmission);
+      $form['sim-profile1'] = [
+         '#type' => 'select',
+         '#title' => t('SIM Profiles1'),
+         '#default_value' => 'None',
+         '#required' => TRUE,
+         '#options' => $resultsimandvariation, //common sim profile will get sorted as per group type(product variation and sim profile)
+         '#wrapper_attributes' => [
+                'class' => ['custom-simprofile1-wrapper']
+            ]
+      ];
+      //Add New SIM Profile
+      if (!$resultsimandvariation) {
+            $addnewurl   = Url::fromUserInput('/simprofile');
+            $form['new-sim-profile'] = [
+               '#type' => 'link',
+               '#title' => 'Add New SIM Profile',
+               '#url' => $addnewurl,
+               '#attributes' => [
+                   'target' => '_self',
+                   'class' => '',
+                   'title' => t("Add New SIM Profile"),
+               ],
+             ];
+      }
+   }
+   //simprofile1 end
+   //slot1 end
+
+   //Slot2
+   //simprofile1
+   if (isset($_GET['profile_type']) && $_GET['profile_type'] == 2) {
+      $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id()); //current user load
+      if ($user) {
+         $group = $user->field_group_type->getValue(); //current user group load
+         $type = $group[0]['target_id']; //current user group id
+         //if partner name dropdown value select
+         if ($_GET['group_id']) {
+            $type = $_GET['group_id'];
+         }
+         /*
+         $tier = $user->field_tier_type->getValue();
+         if (!empty($tier) && isset($tier[0]['target_id'])) {
+           $term = \Drupal\taxonomy\Entity\Term::load($tier[0]['target_id']);
+           $tier_name = $term->getName();            
+             $form['price-tier'] = [
+                '#prefix' => t('Tier : ').t($tier_name),
+                '#weight' => 90,
+             ];
+         }
+         */         
+      }
+
+      //jcius_custom.js flag
+      if (isset($_COOKIE['flag1']) && $_COOKIE['flag1'] == 1) {
+         //Clear previous cart when partner changed
+         jcius_custom_emtpy_cart_when_partner_changed();
+         //$parameter = \Drupal::routeMatch()->getParameter('commerce_product');
+         $product = \Drupal\commerce_product\Entity\Product::load('7');
+         /*Load Product Variations*/
+         $entity_manager = \Drupal::entityTypeManager();
+         $variations = $product->getVariations();
+         foreach ($variations as $variation) {
+            $sku = $variation->getSku();
+            $title = $variation->getTitle();
+            $id = $variation->get('variation_id')->value;
+            $status = $variation->get('status')->value;
+            $grouptype = $variation->get('field_group_id')->value;
+            //echo "grouptype:".$grouptype;
+            if (($type == $grouptype) && ($title == $_COOKIE['simprofile1']) && ($status == '1')) {
+               $variation_id = $variation->get('variation_id')->value;
+               $store_id = 1;
+               $order_type = 'default'; // If you have several order types, specify one here.
+               $entity_manager = \Drupal::entityTypeManager();
+               $cart_manager = \Drupal::service('commerce_cart.cart_manager');
+               $cart_provider = \Drupal::service('commerce_cart.cart_provider');
+
+               // Following line is the same as Drupal\commerce_store\Entity\Store::load($store_id);
+               $store = $entity_manager->getStorage('commerce_store')->load($store_id);
+               $product_variation = $entity_manager->getStorage('commerce_product_variation')->load($variation_id);
+               // This is special: We must know if there is already a cart for the provided
+               // order type and store:
+               $cart = $cart_provider->getCart($order_type, $store);
+               if ($cart) {
+                  $matching_cart_variation_id = [];
+                  foreach ($cart->getItems() as $order_item) {
+                     $product_variation = $order_item->getPurchasedEntity();
+                     $cart_variation_id = $product_variation->get('variation_id')->value;
+                     if ($cart_variation_id == $variation_id) {
+                        $matching_cart_variation_id[] = $cart_variation_id;
+                     }
+                  }
+
+                  if ($matching_cart_variation_id) {
+                     $qnty = 0;
+                  } else {
+                     $qnty = 1;
+                  }
+               } else {
+                  $qnty = 1;
+               }
+
+               if (!$cart) {
+                  $cart = $cart_provider->createCart($order_type, $store);
+               }
+
+               $order_item_option_2 = $entity_manager->getStorage('commerce_order_item')->create([
+                  'type' => 'default', // Also, Commerce 2.x have a feature to define custom "line item types".
+                  'purchased_entity' => (string) $variation_id,
+                  'quantity' => $qnty, // Amount or quantity to be added to the cart.
+                  'unit_price' => $product_variation->getPrice(),
+               ]);
+               $order_item_option_2->save();
+               $cart_manager->addOrderItem($cart, $order_item_option_2);
+
+               \Drupal::messenger()->addStatus(t('Product added to the cart.'));
+               setrawcookie('flag1', 0);
+               setcookie("flag1", 0);
+               unset($_COOKIE['flag1']);
+               setcookie('flag1', '', time() - 3600, '/'); // empty value and old timestamp
+            } //if end
+
+            //if 2 start
+            if (($type == $grouptype) && ($title . '(Purchased)' == $_COOKIE['simprofile1']) && ($status == '1')) {
+               $variation_id = $variation->get('variation_id')->value;
+               $price = new \Drupal\commerce_price\Price('0', 'USD');
+               $product_variation = \Drupal\commerce_product\Entity\ProductVariation::load($variation_id);
+               $product_variation->set('price', $price);
+               $product_variation->save();
+               //
+               $store_id = 1;
+               $order_type = 'default'; // If you have several order types, specify one here.
+               $entity_manager = \Drupal::entityTypeManager();
+               $cart_manager = \Drupal::service('commerce_cart.cart_manager');
+               $cart_provider = \Drupal::service('commerce_cart.cart_provider');
+
+               // Following line is the same as Drupal\commerce_store\Entity\Store::load($store_id);
+               $store = $entity_manager->getStorage('commerce_store')->load($store_id);
+               $product_variation = $entity_manager->getStorage('commerce_product_variation')->load($variation_id);
+               // This is special: We must know if there is already a cart for the provided
+               // order type and store:
+               $cart = $cart_provider->getCart($order_type, $store);
+               if ($cart) {
+                  $matching_cart_variation_id2 = [];
+                  foreach ($cart->getItems() as $order_item) {
+                     $product_variation = $order_item->getPurchasedEntity();
+                     $cart_variation_id = $product_variation->get('variation_id')->value;
+                     if ($cart_variation_id == $variation_id) {
+                        $matching_cart_variation_id2[] = $cart_variation_id;
+                     }
+
+                  }
+
+                  if ($matching_cart_variation_id2) {
+                     $qnty = 0;
+                  } else {
+                     $qnty = 1;
+                  }
+               } else {
+                  $qnty = 1;
+               }
+
+               if (!$cart) {
+                  $cart = $cart_provider->createCart($order_type, $store);
+               }
+
+               $order_item_option_2 = $entity_manager->getStorage('commerce_order_item')->create([
+                  'type' => 'default', // Also, Commerce 2.x have a feature to define custom "line item types".
+                  'purchased_entity' => (string) $variation_id,
+                  'quantity' => $qnty, // Amount or quantity to be added to the cart.
+                  'unit_price' => $product_variation->getPrice(),
+               ]);
+               $order_item_option_2->save();
+               $cart_manager->addOrderItem($cart, $order_item_option_2);
+               \Drupal::messenger()->addStatus(t('Product added to the cart.'));
+               setrawcookie('flag1', 0);
+               setcookie("flag1", 0);
+               unset($_COOKIE['flag1']);
+               setcookie('flag1', '', time() - 3600, '/'); // empty value and old timestamp
+            } //if2 end
+         }
+      }
+      //
+      $select = \Drupal::service('database')
+         ->select('webform_submission_data', 'wsd')
+         ->fields('wsd', array('sid'))
+         ->orderBy('wsd.sid', 'DESC')
+         ->condition('wsd.webform_id', 'sim_profile', '=') //webform id
+         //->condition('wsd.name', 'group_type', '=')
+         ->condition('wsd.name', 'partner_name', '=')
+         ->condition('wsd.value', $type, '=') //passing gorup id of the current user
+         ->execute();
+      $results = $select->fetchAll(\PDO::FETCH_COLUMN);
+      $simprofilesubmission = [];
+      foreach ($results as $result) {
+         // Fetch or load records of extracted submission Id
+         if ($result) {
+            $sid = $result;
+            $submission = \Drupal\webform\Entity\WebformSubmission::load($sid);
+            if($submission){
+               $submission_data = $submission->getData();
+               $simprofilesubmission[] = trim($submission_data['sim_profile_name']); //sim profile groupby user
+            }
+         }
+      }
+
+      //loaded current group user from current user group
+      $userStorage = \Drupal::entityTypeManager()->getStorage('user');
+      $query = $userStorage->getQuery();
+      $uids = $query
+         ->condition('status', '1')
+         ->condition('field_group_type', $type)
+         ->execute();
+      $uid = implode(', ', $uids);
+      if ($uid) {
+         $table = 'commerce_order';
+         $table2 = 'commerce_order_item';
+         $database = \Drupal::database();
+         $query = $database->query("SELECT * FROM {$table} where uid in ({$uid}) and state='completed'");
+         $result = $query->fetchAll();
+         $results = [];
+         foreach ($result as $key => $value) {
+            $query2 = $database->query("SELECT * FROM {$table2} where order_id = {$value->order_id} and `flag` = '0'");
+            $result2 = $query2->fetchAll();
+            foreach ($result2 as $key2 => $value2) {
+               $variation = substr($value2->title, strpos($value2->title, ","));
+               $results[] = trim($variation);
+            }
+         }
+      }
+
+      $form['#attached']['library'][] = 'jcius_custom/lineview_libraries';
+      $form['#attached']['drupalSettings']['jcius_custom']['variable1'] = $results;
+      $allvariation = [];
+      $parameter = \Drupal::routeMatch()->getParameter('commerce_product');
+      $product = \Drupal\commerce_product\Entity\Product::load('7');
+      /*Load Product Variations*/
+      $entity_manager = \Drupal::entityTypeManager();
+      $variations = $product->getVariations();
+
+      $current_product_id = \Drupal::routeMatch()->getParameter('commerce_product')->id();
+
+      if ($current_product_id == '8') {
+         foreach ($variations as $variation) {
+            $grouptype = $variation->get('field_group_id')->value;
+            $profiletype = $variation->get('field_profile_type')->value;
+            $status = $variation->get('status')->value;
+            if (($type == $grouptype) && ('eSIM' == $profiletype) &&($status == 1)) {
+               $allvariation[] = trim($variation->getTitle());
+            }
+         }
+      } else {
+         foreach ($variations as $variation) {
+            $grouptype = $variation->get('field_group_id')->value;
+            $profiletype = $variation->get('field_profile_type')->value;
+            $status = $variation->get('status')->value;
+            if (($type == $grouptype) && ('eSIM' != $profiletype) &&($status == 1)) {
+               $allvariation[] = trim($variation->getTitle());
+            }
+         }
+      }
+      
+      $resultsimandvariation = array_intersect($allvariation, $simprofilesubmission);
+      $form['sim-profile1'] = [
+         '#type' => 'select',
+         '#title' => t('SIM Profiles1'),
+         '#default_value' => 'None',
+         '#required' => TRUE,
+         '#options' => $resultsimandvariation, //common sim profile will get sorted as per group type(product variation and sim profile)
+         '#wrapper_attributes' => [
+                'class' => ['custom-simprofile1-wrapper']
+            ]
+      ];     
+
+   }
+   //simprofile1 end
+   //simprofile2
+   if (isset($_GET['profile_type']) && $_GET['profile_type'] == 2) {
+      $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id()); //current user load
+      if ($user) {
+         $group = $user->field_group_type->getValue(); //current user group load
+         $type = $group[0]['target_id']; //current user group id
+         //if partner name dropdown value select
+         if ($_GET['group_id']) {
+            $type = $_GET['group_id'];
+         }
+         /*
+         $tier = $user->field_tier_type->getValue();
+         if (!empty($tier) && isset($tier[0]['target_id'])) {
+           $term = \Drupal\taxonomy\Entity\Term::load($tier[0]['target_id']);
+           $tier_name = $term->getName();            
+             $form['price-tier'] = [
+                '#prefix' => t('Tier : ').t($tier_name),
+                '#weight' => 90,
+             ];
+         }
+         */       
+      }
+
+      //jcius_custom.js flag
+      if (isset($_COOKIE['flag2']) && $_COOKIE['flag2'] == 1) {
+         //Clear previous cart when partner changed
+         jcius_custom_emtpy_cart_when_partner_changed();
+         //$parameter = \Drupal::routeMatch()->getParameter('commerce_product');
+         $product = \Drupal\commerce_product\Entity\Product::load('7');
+         /*Load Product Variations*/
+         $entity_manager = \Drupal::entityTypeManager();
+         $variations = $product->getVariations();
+         foreach ($variations as $variation) {
+            $sku = $variation->getSku();
+            $title = $variation->getTitle();
+            $id = $variation->get('variation_id')->value;
+            $status = $variation->get('status')->value;
+            $grouptype = $variation->get('field_group_id')->value;
+            //echo "grouptype:".$grouptype;
+            if (($type == $grouptype) && ($title == $_COOKIE['simprofile2']) && ($status == '1')) {
+               $variation_id = $variation->get('variation_id')->value;
+               $store_id = 1;
+               $order_type = 'default'; // If you have several order types, specify one here.
+               $entity_manager = \Drupal::entityTypeManager();
+               $cart_manager = \Drupal::service('commerce_cart.cart_manager');
+               $cart_provider = \Drupal::service('commerce_cart.cart_provider');
+
+               // Following line is the same as Drupal\commerce_store\Entity\Store::load($store_id);
+               $store = $entity_manager->getStorage('commerce_store')->load($store_id);
+               $product_variation = $entity_manager->getStorage('commerce_product_variation')->load($variation_id);
+               // This is special: We must know if there is already a cart for the provided
+               // order type and store:
+               $cart = $cart_provider->getCart($order_type, $store);
+               if ($cart) {
+                  $matching_cart_variation_id = [];
+                  foreach ($cart->getItems() as $order_item) {
+                     $product_variation = $order_item->getPurchasedEntity();
+                     $cart_variation_id = $product_variation->get('variation_id')->value;
+                     if ($cart_variation_id == $variation_id) {
+                        $matching_cart_variation_id[] = $cart_variation_id;
+                     }
+                  }
+
+                  if ($matching_cart_variation_id) {
+                     $qnty = 0;
+                  } else {
+                     $qnty = 1;
+                  }
+               } else {
+                  $qnty = 1;
+               }
+
+               if (!$cart) {
+                  $cart = $cart_provider->createCart($order_type, $store);
+               }
+
+               $order_item_option_2 = $entity_manager->getStorage('commerce_order_item')->create([
+                  'type' => 'default', // Also, Commerce 2.x have a feature to define custom "line item types".
+                  'purchased_entity' => (string) $variation_id,
+                  'quantity' => $qnty, // Amount or quantity to be added to the cart.
+                  'unit_price' => $product_variation->getPrice(),
+               ]);
+               $order_item_option_2->save();
+               $cart_manager->addOrderItem($cart, $order_item_option_2);
+
+               \Drupal::messenger()->addStatus(t('Product added to the cart.'));
+               setrawcookie('flag2', 0);
+               setcookie("flag2", 0);
+               unset($_COOKIE['flag2']);
+               setcookie('flag2', '', time() - 3600, '/'); // empty value and old timestamp
+            } //if end
+
+            //if 2 start
+            if (($type == $grouptype) && ($title . '(Purchased)' == $_COOKIE['simprofile2']) && ($status == '1')) {
+               $variation_id = $variation->get('variation_id')->value;
+               $price = new \Drupal\commerce_price\Price('0', 'USD');
+               $product_variation = \Drupal\commerce_product\Entity\ProductVariation::load($variation_id);
+               $product_variation->set('price', $price);
+               $product_variation->save();
+               //
+               $store_id = 1;
+               $order_type = 'default'; // If you have several order types, specify one here.
+
+               $entity_manager = \Drupal::entityTypeManager();
+               $cart_manager = \Drupal::service('commerce_cart.cart_manager');
+               $cart_provider = \Drupal::service('commerce_cart.cart_provider');
+
+               // Following line is the same as Drupal\commerce_store\Entity\Store::load($store_id);
+               $store = $entity_manager->getStorage('commerce_store')->load($store_id);
+               $product_variation = $entity_manager->getStorage('commerce_product_variation')->load($variation_id);
+               // This is special: We must know if there is already a cart for the provided
+               // order type and store:
+               $cart = $cart_provider->getCart($order_type, $store);
+               if ($cart) {
+                  $matching_cart_variation_id2 = [];
+                  foreach ($cart->getItems() as $order_item) {
+                     $product_variation = $order_item->getPurchasedEntity();
+                     $cart_variation_id = $product_variation->get('variation_id')->value;
+                     if ($cart_variation_id == $variation_id) {
+                        $matching_cart_variation_id2[] = $cart_variation_id;
+                     }
+
+                  }
+
+                  if ($matching_cart_variation_id2) {
+                     $qnty = 0;
+                  } else {
+                     $qnty = 1;
+                  }
+               } else {
+                  $qnty = 1;
+               }
+
+               if (!$cart) {
+                  $cart = $cart_provider->createCart($order_type, $store);
+               }
+
+               $order_item_option_2 = $entity_manager->getStorage('commerce_order_item')->create([
+                  'type' => 'default', // Also, Commerce 2.x have a feature to define custom "line item types".
+                  'purchased_entity' => (string) $variation_id,
+                  'quantity' => $qnty, // Amount or quantity to be added to the cart.
+                  'unit_price' => $product_variation->getPrice(),
+               ]);
+               $order_item_option_2->save();
+               $cart_manager->addOrderItem($cart, $order_item_option_2);
+               \Drupal::messenger()->addStatus(t('Product added to the cart.'));
+               setrawcookie('flag2', 0);
+               setcookie("flag2", 0);
+               unset($_COOKIE['flag2']);
+               setcookie('flag2', '', time() - 3600, '/'); // empty value and old timestamp
+            } //if2 end
+         }
+      }
+      //
+      $select = \Drupal::service('database')
+         ->select('webform_submission_data', 'wsd')
+         ->fields('wsd', array('sid'))
+         ->orderBy('wsd.sid', 'DESC')
+         ->condition('wsd.webform_id', 'sim_profile', '=') //webform id
+         //->condition('wsd.name', 'group_type', '=')
+         ->condition('wsd.name', 'partner_name', '=')
+         ->condition('wsd.value', $type, '=') //passing gorup id of the current user
+         ->execute();
+      $results = $select->fetchAll(\PDO::FETCH_COLUMN);
+      $simprofilesubmission = [];
+      foreach ($results as $result) {
+         // Fetch or load records of extracted submission Id
+         if ($result) {
+            $sid = $result;
+            $submission = \Drupal\webform\Entity\WebformSubmission::load($sid);
+            if($submission){
+               $submission_data = $submission->getData();
+               $simprofilesubmission[] = trim($submission_data['sim_profile_name']); //sim profile groupby user
+            }
+         }
+      }
+
+      //loaded current group user from current user group
+      $userStorage = \Drupal::entityTypeManager()->getStorage('user');
+      $query = $userStorage->getQuery();
+      $uids = $query
+         ->condition('status', '1')
+         ->condition('field_group_type', $type)
+         ->execute();
+      $uid = implode(', ', $uids);
+      if ($uid) {
+         $table = 'commerce_order';
+         $table2 = 'commerce_order_item';
+         $database = \Drupal::database();
+         $query = $database->query("SELECT * FROM {$table} where uid in ({$uid}) and state='completed'");
+         $result = $query->fetchAll();
+         $results = [];
+         foreach ($result as $key => $value) {
+            $query2 = $database->query("SELECT * FROM {$table2} where order_id = {$value->order_id} and `flag` = '0'");
+            $result2 = $query2->fetchAll();
+            foreach ($result2 as $key2 => $value2) {
+               $variation = substr($value2->title, strpos($value2->title, ","));
+               $results[] = trim($variation);
+            }
+         }
+      }
+
+      $form['#attached']['library'][] = 'jcius_custom/lineview_libraries';
+      $form['#attached']['drupalSettings']['jcius_custom']['variable2'] = $results;
+      $allvariation = [];
+      $parameter = \Drupal::routeMatch()->getParameter('commerce_product');
+      $product = \Drupal\commerce_product\Entity\Product::load('7');
+      /*Load Product Variations*/
+      $entity_manager = \Drupal::entityTypeManager();
+      $variations = $product->getVariations();
+      $current_product_id = \Drupal::routeMatch()->getParameter('commerce_product')->id();
+
+      if ($current_product_id == '8') {
+         foreach ($variations as $variation) {
+            $grouptype = $variation->get('field_group_id')->value;
+            $profiletype = $variation->get('field_profile_type')->value;
+            $status = $variation->get('status')->value;
+            if (($type == $grouptype) && ('eSIM' == $profiletype) &&($status == 1)) {
+               $allvariation[] = trim($variation->getTitle());
+            }
+         }
+      } else {
+         foreach ($variations as $variation) {
+            $grouptype = $variation->get('field_group_id')->value;
+            $profiletype = $variation->get('field_profile_type')->value;
+            $status = $variation->get('status')->value;
+            if (($type == $grouptype) && ('eSIM' != $profiletype) &&($status == 1)) {
+               $allvariation[] = trim($variation->getTitle());
+            }
+         }
+      }
+      $resultsimandvariation = array_intersect($allvariation, $simprofilesubmission);
+      $form['sim-profile2'] = [
+         '#type' => 'select',
+         '#title' => t('SIM Profiles2'),
+         '#default_value' => 'None',
+         '#required' => TRUE,
+         '#options' => $resultsimandvariation, //common sim profile will get sorted as per group type(product variation and sim profile)
+         '#wrapper_attributes' => [
+                'class' => ['custom-simprofile2-wrapper']
+            ]
+      ];
+      //Add New SIM Profile
+      if (!$resultsimandvariation) {
+            $addnewurl   = Url::fromUserInput('/simprofile');
+            $form['new-sim-profile'] = [
+               '#type' => 'link',
+               '#title' => 'Add New SIM Profile',
+               '#url' => $addnewurl,
+               '#attributes' => [
+                   'target' => '_self',
+                   'class' => '',
+                   'title' => t("Add New SIM Profile"),
+               ],
+             ];
+      }
+   }
+   //simprofile2 end
+   //Slot2 end
+   
+   //Slot3
+   //simprofile1
+   if (isset($_GET['profile_type']) && $_GET['profile_type'] == 3) {
+      $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id()); //current user load
+      if ($user) {
+         $group = $user->field_group_type->getValue(); //current user group load
+         $type = $group[0]['target_id']; //current user group id
+         //if partner name dropdown value select
+         if ($_GET['group_id']) {
+            $type = $_GET['group_id'];
+         }
+         /*
+         $tier = $user->field_tier_type->getValue();
+         if (!empty($tier) && isset($tier[0]['target_id'])) {
+           $term = \Drupal\taxonomy\Entity\Term::load($tier[0]['target_id']);
+           $tier_name = $term->getName();            
+             $form['price-tier'] = [
+                '#prefix' => t('Tier : ').t($tier_name),
+                '#weight' => 90,
+             ];
+         }*/    
+      }
+
+      //jcius_custom.js flag
+      if (isset($_COOKIE['flag1']) && $_COOKIE['flag1'] == 1) {
+         //Clear previous cart when partner changed
+         jcius_custom_emtpy_cart_when_partner_changed();
+         //$parameter = \Drupal::routeMatch()->getParameter('commerce_product');
+         $product = \Drupal\commerce_product\Entity\Product::load('7');
+         /*Load Product Variations*/
+         $entity_manager = \Drupal::entityTypeManager();
+         $variations = $product->getVariations();
+         foreach ($variations as $variation) {
+            $sku = $variation->getSku();
+            $title = $variation->getTitle();
+            $id = $variation->get('variation_id')->value;
+            $status = $variation->get('status')->value;
+            $grouptype = $variation->get('field_group_id')->value;
+            //echo "grouptype:".$grouptype;
+            if (($type == $grouptype) && ($title == $_COOKIE['simprofile1']) && ($status == '1')) {
+               $variation_id = $variation->get('variation_id')->value;
+               $store_id = 1;
+               $order_type = 'default'; // If you have several order types, specify one here.
+               $entity_manager = \Drupal::entityTypeManager();
+               $cart_manager = \Drupal::service('commerce_cart.cart_manager');
+               $cart_provider = \Drupal::service('commerce_cart.cart_provider');
+
+               // Following line is the same as Drupal\commerce_store\Entity\Store::load($store_id);
+               $store = $entity_manager->getStorage('commerce_store')->load($store_id);
+               $product_variation = $entity_manager->getStorage('commerce_product_variation')->load($variation_id);
+               // This is special: We must know if there is already a cart for the provided
+               // order type and store:
+               $cart = $cart_provider->getCart($order_type, $store);
+               if ($cart) {
+                  $matching_cart_variation_id = [];
+                  foreach ($cart->getItems() as $order_item) {
+                     $product_variation = $order_item->getPurchasedEntity();
+                     $cart_variation_id = $product_variation->get('variation_id')->value;
+                     if ($cart_variation_id == $variation_id) {
+                        $matching_cart_variation_id[] = $cart_variation_id;
+                     }
+                  }
+
+                  if ($matching_cart_variation_id) {
+                     $qnty = 0;
+                  } else {
+                     $qnty = 1;
+                  }
+               } else {
+                  $qnty = 1;
+               }
+
+               if (!$cart) {
+                  $cart = $cart_provider->createCart($order_type, $store);
+               }
+
+               $order_item_option_2 = $entity_manager->getStorage('commerce_order_item')->create([
+                  'type' => 'default', // Also, Commerce 2.x have a feature to define custom "line item types".
+                  'purchased_entity' => (string) $variation_id,
+                  'quantity' => $qnty, // Amount or quantity to be added to the cart.
+                  'unit_price' => $product_variation->getPrice(),
+               ]);
+               $order_item_option_2->save();
+               $cart_manager->addOrderItem($cart, $order_item_option_2);
+
+               \Drupal::messenger()->addStatus(t('Product added to the cart.'));
+               setrawcookie('flag1', 0);
+               setcookie("flag1", 0);
+               unset($_COOKIE['flag1']);
+               setcookie('flag1', '', time() - 3600, '/'); // empty value and old timestamp
+            } //if end
+
+            //if 2 start
+            if (($type == $grouptype) && ($title . '(Purchased)' == $_COOKIE['simprofile1']) && ($status == '1')) {
+               $variation_id = $variation->get('variation_id')->value;
+               $price = new \Drupal\commerce_price\Price('0', 'USD');
+               $product_variation = \Drupal\commerce_product\Entity\ProductVariation::load($variation_id);
+               $product_variation->set('price', $price);
+               $product_variation->save();
+               $store_id = 1;
+               $order_type = 'default'; // If you have several order types, specify one here.
+               $entity_manager = \Drupal::entityTypeManager();
+               $cart_manager = \Drupal::service('commerce_cart.cart_manager');
+               $cart_provider = \Drupal::service('commerce_cart.cart_provider');
+
+               // Following line is the same as Drupal\commerce_store\Entity\Store::load($store_id);
+               $store = $entity_manager->getStorage('commerce_store')->load($store_id);
+               $product_variation = $entity_manager->getStorage('commerce_product_variation')->load($variation_id);
+               // This is special: We must know if there is already a cart for the provided
+               // order type and store:
+               $cart = $cart_provider->getCart($order_type, $store);
+               //
+               if($cart){
+                  $matching_cart_variation_id2 = [];
+                  foreach ($cart->getItems() as $order_item) {
+                     $product_variation = $order_item->getPurchasedEntity();
+                     $cart_variation_id = $product_variation->get('variation_id')->value;
+                     if ($cart_variation_id == $variation_id) {
+                        $matching_cart_variation_id2[] = $cart_variation_id;
+                     }
+
+                  }
+
+                  if ($matching_cart_variation_id2) {
+                     $qnty = 0;
+                  } else {
+                     $qnty = 1;
+                  }
+               } else {
+                  $qnty = 1;
+               }
+
+               if (!$cart) {
+                  $cart = $cart_provider->createCart($order_type, $store);
+               }
+
+               $order_item_option_2 = $entity_manager->getStorage('commerce_order_item')->create([
+                  'type' => 'default', // Also, Commerce 2.x have a feature to define custom "line item types".
+                  'purchased_entity' => (string) $variation_id,
+                  'quantity' => $qnty, // Amount or quantity to be added to the cart.
+                  'unit_price' => $product_variation->getPrice(),
+               ]);
+               $order_item_option_2->save();
+               $cart_manager->addOrderItem($cart, $order_item_option_2);
+               \Drupal::messenger()->addStatus(t('Product added to the cart.'));
+               setrawcookie('flag1', 0);
+               setcookie("flag1", 0);
+               unset($_COOKIE['flag1']);
+               setcookie('flag1', '', time() - 3600, '/'); // empty value and old timestamp
+            } //if2 end
+         }
+      }
+
+      $select = \Drupal::service('database')
+         ->select('webform_submission_data', 'wsd')
+         ->fields('wsd', array('sid'))
+         ->orderBy('wsd.sid', 'DESC')
+         ->condition('wsd.webform_id', 'sim_profile', '=') //webform id
+         //->condition('wsd.name', 'group_type', '=')
+         ->condition('wsd.name', 'partner_name', '=')
+         ->condition('wsd.value', $type, '=') //passing gorup id of the current user
+         ->execute();
+      $results = $select->fetchAll(\PDO::FETCH_COLUMN);
+      $simprofilesubmission = [];
+      foreach ($results as $result) {
+         // Fetch or load records of extracted submission Id
+         if ($result) {
+            $sid = $result;
+            $submission = \Drupal\webform\Entity\WebformSubmission::load($sid);
+            if($submission){
+               $submission_data = $submission->getData();
+               $simprofilesubmission[] = trim($submission_data['sim_profile_name']); //sim profile groupby user
+            }
+         }
+      }
+
+      //loaded current group user from current user group
+      $userStorage = \Drupal::entityTypeManager()->getStorage('user');
+      $query = $userStorage->getQuery();
+      $uids = $query
+         ->condition('status', '1')
+         ->condition('field_group_type', $type)
+         ->execute();
+      $uid = implode(', ', $uids);
+      if ($uid) {
+         $table = 'commerce_order';
+         $table2 = 'commerce_order_item';
+         $database = \Drupal::database();
+         $query = $database->query("SELECT * FROM {$table} where uid in ({$uid}) and state='completed'");
+         $result = $query->fetchAll();
+         $results = [];
+         foreach ($result as $key => $value) {
+            $query2 = $database->query("SELECT * FROM {$table2} where order_id = {$value->order_id} and `flag` = '0'");
+            $result2 = $query2->fetchAll();
+            foreach ($result2 as $key2 => $value2) {
+               $variation = substr($value2->title, strpos($value2->title, ","));
+               $results[] = trim($variation);
+            }
+         }
+      }
+
+      $form['#attached']['library'][] = 'jcius_custom/lineview_libraries';
+      $form['#attached']['drupalSettings']['jcius_custom']['variable1'] = $results;
+      $allvariation = [];
+      $parameter = \Drupal::routeMatch()->getParameter('commerce_product');
+      $product = \Drupal\commerce_product\Entity\Product::load('7');
+      /*Load Product Variations*/
+      $entity_manager = \Drupal::entityTypeManager();
+      $variations = $product->getVariations();
+      $current_product_id = \Drupal::routeMatch()->getParameter('commerce_product')->id();
+
+      if ($current_product_id == '8') {
+         foreach ($variations as $variation) {
+            $grouptype = $variation->get('field_group_id')->value;
+            $profiletype = $variation->get('field_profile_type')->value;
+            $status = $variation->get('status')->value;
+            if (($type == $grouptype) && ('eSIM' == $profiletype) &&($status == 1)) {
+               $allvariation[] = trim($variation->getTitle());
+            }
+         }
+      } else {
+         foreach ($variations as $variation) {
+            $grouptype = $variation->get('field_group_id')->value;
+            $profiletype = $variation->get('field_profile_type')->value;
+            $status = $variation->get('status')->value;
+            if (($type == $grouptype) && ('eSIM' != $profiletype) &&($status == 1)) {
+               $allvariation[] = trim($variation->getTitle());
+            }
+         }
+      }
+      $resultsimandvariation = array_intersect($allvariation, $simprofilesubmission);
+         $form['sim-profile1'] = [
+            '#type' => 'select',
+            '#title' => t('SIM Profiles1'),
+            '#default_value' => 'None',
+            '#required' => TRUE,
+            '#options' => $resultsimandvariation, //common sim profile will get sorted as per group type(product variation and sim profile)
+            '#wrapper_attributes' => [
+                'class' => ['custom-simprofile1-wrapper']
+            ]
+         ];         
+   }
+   //simprofile1 end
+   //simprofile2
+   if (isset($_GET['profile_type']) && $_GET['profile_type'] == 3) {
+      $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id()); //current user load
+      if ($user) {
+         $group = $user->field_group_type->getValue(); //current user group load
+         $type = $group[0]['target_id']; //current user group id
+         //if partner name dropdown value select
+         if ($_GET['group_id']) {
+            $type = $_GET['group_id'];
+         }
+         /*
+         $tier = $user->field_tier_type->getValue();
+         if (!empty($tier) && isset($tier[0]['target_id'])) {
+           $term = \Drupal\taxonomy\Entity\Term::load($tier[0]['target_id']);
+           $tier_name = $term->getName();            
+             $form['price-tier'] = [
+                '#prefix' => t('Tier : ').t($tier_name),
+                '#weight' => 90,
+             ];
+         }
+         */        
+      }
+
+      //jcius_custom.js flag
+      if (isset($_COOKIE['flag2']) && $_COOKIE['flag2'] == 1) {
+         //Clear previous cart when partner changed
+         jcius_custom_emtpy_cart_when_partner_changed();
+         //$parameter = \Drupal::routeMatch()->getParameter('commerce_product');
+         $product = \Drupal\commerce_product\Entity\Product::load('7');
+         /*Load Product Variations*/
+         $entity_manager = \Drupal::entityTypeManager();
+         $variations = $product->getVariations();
+         foreach ($variations as $variation) {
+            $sku = $variation->getSku();
+            $title = $variation->getTitle();
+            $id = $variation->get('variation_id')->value;
+            $status = $variation->get('status')->value;
+            $grouptype = $variation->get('field_group_id')->value;
+            //echo "grouptype:".$grouptype;
+            if (($type == $grouptype) && ($title == $_COOKIE['simprofile2']) && ($status == '1')) {
+               $variation_id = $variation->get('variation_id')->value;
+               $store_id = 1;
+               $order_type = 'default'; // If you have several order types, specify one here.
+               $entity_manager = \Drupal::entityTypeManager();
+               $cart_manager = \Drupal::service('commerce_cart.cart_manager');
+               $cart_provider = \Drupal::service('commerce_cart.cart_provider');
+               $store = $entity_manager->getStorage('commerce_store')->load($store_id);
+               $product_variation = $entity_manager->getStorage('commerce_product_variation')->load($variation_id);
+               // This is special: We must know if there is already a cart for the provided
+               // order type and store:
+               $cart = $cart_provider->getCart($order_type, $store);
+               if ($cart) {
+                  $matching_cart_variation_id = [];
+                  foreach ($cart->getItems() as $order_item) {
+                     $product_variation = $order_item->getPurchasedEntity();
+                     $cart_variation_id = $product_variation->get('variation_id')->value;
+                     if ($cart_variation_id == $variation_id) {
+                        $matching_cart_variation_id[] = $cart_variation_id;
+                     }
+                  }
+
+                  if ($matching_cart_variation_id) {
+                     $qnty = 0;
+                  } else {
+                     $qnty = 1;
+                  }
+               } else {
+                  $qnty = 1;
+               }
+
+               if (!$cart) {
+                  $cart = $cart_provider->createCart($order_type, $store);
+               }
+
+               $order_item_option_2 = $entity_manager->getStorage('commerce_order_item')->create([
+                  'type' => 'default', // Also, Commerce 2.x have a feature to define custom "line item types".
+                  'purchased_entity' => (string) $variation_id,
+                  'quantity' => $qnty, // Amount or quantity to be added to the cart.
+                  'unit_price' => $product_variation->getPrice(),
+               ]);
+               $order_item_option_2->save();
+               $cart_manager->addOrderItem($cart, $order_item_option_2);
+
+               \Drupal::messenger()->addStatus(t('Product added to the cart.'));
+               setrawcookie('flag2', 0);
+               setcookie("flag2", 0);
+               setcookie('flag2', 0);
+               unset($_COOKIE['flag2']);
+               setcookie('flag2', '', time() - 3600, '/'); // empty value and old timestamp
+            } //if end
+
+            //if 2 start
+            if (($type == $grouptype) && ($title . '(Purchased)' == $_COOKIE['simprofile2']) && ($status == '1')) {
+               $variation_id = $variation->get('variation_id')->value;
+               $price = new \Drupal\commerce_price\Price('0', 'USD');
+               $product_variation = \Drupal\commerce_product\Entity\ProductVariation::load($variation_id);
+               $product_variation->set('price', $price);
+               $product_variation->save();
+               $store_id = 1;
+               $order_type = 'default'; // If you have several order types, specify one here.
+               $entity_manager = \Drupal::entityTypeManager();
+               $cart_manager = \Drupal::service('commerce_cart.cart_manager');
+               $cart_provider = \Drupal::service('commerce_cart.cart_provider');
+
+               // Following line is the same as Drupal\commerce_store\Entity\Store::load($store_id);
+               $store = $entity_manager->getStorage('commerce_store')->load($store_id);
+               $product_variation = $entity_manager->getStorage('commerce_product_variation')->load($variation_id);
+               // This is special: We must know if there is already a cart for the provided
+               // order type and store:
+               $cart = $cart_provider->getCart($order_type, $store);
+               if ($cart) {
+                  $matching_cart_variation_id2 = [];
+                  foreach ($cart->getItems() as $order_item) {
+                     $product_variation = $order_item->getPurchasedEntity();
+                     $cart_variation_id = $product_variation->get('variation_id')->value;
+                     if($cart_variation_id == $variation_id) {
+                        $matching_cart_variation_id2[] = $cart_variation_id;
+                     }
+                  }
+
+                  if ($matching_cart_variation_id2) {
+                     $qnty = 0;
+                  } else {
+                     $qnty = 1;
+                  }
+               } else {
+                  $qnty = 1;
+               }
+
+               if (!$cart) {
+                  $cart = $cart_provider->createCart($order_type, $store);
+               }
+
+               $order_item_option_2 = $entity_manager->getStorage('commerce_order_item')->create([
+                  'type' => 'default', // Also, Commerce 2.x have a feature to define custom "line item types".
+                  'purchased_entity' => (string) $variation_id,
+                  'quantity' => $qnty, // Amount or quantity to be added to the cart.
+                  'unit_price' => $product_variation->getPrice(),
+               ]);
+               $order_item_option_2->save();
+               $cart_manager->addOrderItem($cart, $order_item_option_2);
+               \Drupal::messenger()->addStatus(t('Product added to the cart.'));
+               setrawcookie('flag2', 0);
+               setcookie("flag2", 0);
+               unset($_COOKIE['flag2']);
+               setcookie('flag2', '', time() - 3600, '/'); // empty value and old timestamp
+            } //if2 end
+         }
+      }
+      //
+      $select = \Drupal::service('database')
+         ->select('webform_submission_data', 'wsd')
+         ->fields('wsd', array('sid'))
+         ->orderBy('wsd.sid', 'DESC')
+         ->condition('wsd.webform_id', 'sim_profile', '=') //webform id
+         //->condition('wsd.name', 'group_type', '=')
+         ->condition('wsd.name', 'partner_name', '=')
+         ->condition('wsd.value', $type, '=') //passing gorup id of the current user
+         ->execute();
+      $results = $select->fetchAll(\PDO::FETCH_COLUMN);
+      $simprofilesubmission = [];
+      foreach ($results as $result) {
+         // Fetch or load records of extracted submission Id
+         if ($result) {
+            $sid = $result;
+            $submission = \Drupal\webform\Entity\WebformSubmission::load($sid);
+            if($submission){
+               $submission_data = $submission->getData();
+               $simprofilesubmission[] = trim($submission_data['sim_profile_name']); //sim profile groupby user
+            }
+         }
+      }
+
+      //loaded current group user from current user group
+      $userStorage = \Drupal::entityTypeManager()->getStorage('user');
+      $query = $userStorage->getQuery();
+      $uids = $query
+         ->condition('status', '1')
+         ->condition('field_group_type', $type)
+         ->execute();
+      $uid = implode(', ', $uids);
+      if ($uid) {
+         $table = 'commerce_order';
+         $table2 = 'commerce_order_item';
+         $database = \Drupal::database();
+         $query = $database->query("SELECT * FROM {$table} where uid in ({$uid}) and state='completed'");
+         $result = $query->fetchAll();
+         $results = [];
+         foreach ($result as $key => $value) {
+            $query2 = $database->query("SELECT * FROM {$table2} where order_id = {$value->order_id} and `flag` = '0'");
+            $result2 = $query2->fetchAll();
+            foreach ($result2 as $key2 => $value2) {
+               $variation = substr($value2->title, strpos($value2->title, ","));
+               $results[] = trim($variation);
+            }
+         }
+      }
+
+      $form['#attached']['library'][] = 'jcius_custom/lineview_libraries';
+      $form['#attached']['drupalSettings']['jcius_custom']['variable2'] = $results;
+      $allvariation = [];
+      $parameter = \Drupal::routeMatch()->getParameter('commerce_product');
+      $product = \Drupal\commerce_product\Entity\Product::load('7');
+      /*Load Product Variations*/
+      $entity_manager = \Drupal::entityTypeManager();
+      $variations = $product->getVariations();
+      $current_product_id = \Drupal::routeMatch()->getParameter('commerce_product')->id();
+
+      if ($current_product_id == '8') {
+         foreach ($variations as $variation) {
+            $grouptype = $variation->get('field_group_id')->value;
+            $profiletype = $variation->get('field_profile_type')->value;
+            $status = $variation->get('status')->value;
+            if (($type == $grouptype) && ('eSIM' == $profiletype) &&($status == 1)) {
+               $allvariation[] = trim($variation->getTitle());
+            }
+         }
+      } else {
+         foreach ($variations as $variation) {
+            $grouptype = $variation->get('field_group_id')->value;
+            $profiletype = $variation->get('field_profile_type')->value;
+            $status = $variation->get('status')->value;
+            if (($type == $grouptype) && ('eSIM' != $profiletype) &&($status == 1)) {
+               $allvariation[] = trim($variation->getTitle());
+            }
+         }
+      }
+      $resultsimandvariation = array_intersect($allvariation, $simprofilesubmission);
+         $form['sim-profile2'] = [
+            '#type' => 'select',
+            '#title' => t('SIM Profiles2'),
+            '#default_value' => 'None',
+            '#required' => TRUE,
+            '#options' => $resultsimandvariation, //common sim profile will get sorted as per group type(product variation and sim profile)
+            '#wrapper_attributes' => [
+                'class' => ['custom-simprofile2-wrapper']
+            ]
+         ];
+   }
+   //simprofile2 end
+   //simprofile3
+   if (isset($_GET['profile_type']) && $_GET['profile_type'] == 3) {
+      $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id()); //current user load
+      if ($user) {
+         $group = $user->field_group_type->getValue(); //current user group load
+         $type = $group[0]['target_id']; //current user group id
+         //if partner name dropdown value select
+         if ($_GET['group_id']) {
+            $type = $_GET['group_id'];
+         }
+         /*
+         $tier = $user->field_tier_type->getValue();
+         if (!empty($tier) && isset($tier[0]['target_id'])) {
+           $term = \Drupal\taxonomy\Entity\Term::load($tier[0]['target_id']);
+           $tier_name = $term->getName();            
+             $form['price-tier'] = [
+                '#prefix' => t('Tier : ').t($tier_name),
+                '#weight' => 90,
+             ];
+         }
+         */      
+      }
+
+      //jcius_custom.js flag
+      if (isset($_COOKIE['flag3']) && $_COOKIE['flag3'] == 1) {
+         //Clear previous cart when partner changed
+         jcius_custom_emtpy_cart_when_partner_changed();
+         //$parameter = \Drupal::routeMatch()->getParameter('commerce_product');
+         $product = \Drupal\commerce_product\Entity\Product::load('7');
+         /*Load Product Variations*/
+         $entity_manager = \Drupal::entityTypeManager();
+         $variations = $product->getVariations();
+         foreach ($variations as $variation) {
+            $sku = $variation->getSku();
+            $title = $variation->getTitle();
+            $id = $variation->get('variation_id')->value;
+            $status = $variation->get('status')->value;
+            $grouptype = $variation->get('field_group_id')->value;
+            //echo "grouptype:".$grouptype;
+            if (($type == $grouptype) && ($title == $_COOKIE['simprofile3']) && ($status == '1')) {
+               $variation_id = $variation->get('variation_id')->value;
+               $store_id = 1;
+               $order_type = 'default'; // If you have several order types, specify one here.
+               $entity_manager = \Drupal::entityTypeManager();
+               $cart_manager = \Drupal::service('commerce_cart.cart_manager');
+               $cart_provider = \Drupal::service('commerce_cart.cart_provider');
+
+               // Following line is the same as Drupal\commerce_store\Entity\Store::load($store_id);
+               $store = $entity_manager->getStorage('commerce_store')->load($store_id);
+               $product_variation = $entity_manager->getStorage('commerce_product_variation')->load($variation_id);
+               // This is special: We must know if there is already a cart for the provided
+               // order type and store:
+               $cart = $cart_provider->getCart($order_type, $store);
+               if ($cart) {
+                  $matching_cart_variation_id = [];
+                  foreach ($cart->getItems() as $order_item) {
+                     $product_variation = $order_item->getPurchasedEntity();
+                     $cart_variation_id = $product_variation->get('variation_id')->value;
+                     if ($cart_variation_id == $variation_id) {
+                        $matching_cart_variation_id[] = $cart_variation_id;
+                     }
+                  }
+
+                  if ($matching_cart_variation_id) {
+                     $qnty = 0;
+                  } else {
+                     $qnty = 1;
+                  }
+               } else {
+                  $qnty = 1;
+               }
+
+               if (!$cart) {
+                  $cart = $cart_provider->createCart($order_type, $store);
+               }
+
+               $order_item_option_2 = $entity_manager->getStorage('commerce_order_item')->create([
+                  'type' => 'default', // Also, Commerce 2.x have a feature to define custom "line item types".
+                  'purchased_entity' => (string) $variation_id,
+                  'quantity' => $qnty, // Amount or quantity to be added to the cart.
+                  'unit_price' => $product_variation->getPrice(),
+               ]);
+               $order_item_option_2->save();
+               $cart_manager->addOrderItem($cart, $order_item_option_2);
+
+               \Drupal::messenger()->addStatus(t('Product added to the cart.'));
+               setrawcookie('flag3', 0);
+               setcookie("flag3", 0);
+               unset($_COOKIE['flag3']);
+               setcookie('flag3', '', time() - 3600, '/'); // empty value and old timestamp
+            } //if end
+
+            //if 2 start
+            if (($type == $grouptype) && ($title . '(Purchased)' == $_COOKIE['simprofile3']) && ($status == '1')) {
+               $variation_id = $variation->get('variation_id')->value;
+               $price = new \Drupal\commerce_price\Price('0', 'USD');
+               $product_variation = \Drupal\commerce_product\Entity\ProductVariation::load($variation_id);
+               $product_variation->set('price', $price);
+               $product_variation->save();
+               $store_id = 1;
+               $order_type = 'default'; // If you have several order types, specify one here.
+               $entity_manager = \Drupal::entityTypeManager();
+               $cart_manager = \Drupal::service('commerce_cart.cart_manager');
+               $cart_provider = \Drupal::service('commerce_cart.cart_provider');
+               $store = $entity_manager->getStorage('commerce_store')->load($store_id);
+               $product_variation = $entity_manager->getStorage('commerce_product_variation')->load($variation_id);
+               // This is special: We must know if there is already a cart for the provided
+               // order type and store:
+               $cart = $cart_provider->getCart($order_type, $store);
+               if ($cart) {
+                  $matching_cart_variation_id2 = [];
+                  foreach ($cart->getItems() as $order_item) {
+                     $product_variation = $order_item->getPurchasedEntity();
+                     $cart_variation_id = $product_variation->get('variation_id')->value;
+                     if($cart_variation_id == $variation_id) {
+                        $matching_cart_variation_id2[] = $cart_variation_id;
+                     }
+
+                  }
+
+                  if ($matching_cart_variation_id2) {
+                     $qnty = 0;
+                  } else {
+                     $qnty = 1;
+                  }
+               } else {
+                  $qnty = 1;
+               }
+
+               if (!$cart) {
+                  $cart = $cart_provider->createCart($order_type, $store);
+               }
+
+               $order_item_option_2 = $entity_manager->getStorage('commerce_order_item')->create([
+                  'type' => 'default', // Also, Commerce 2.x have a feature to define custom "line item types".
+                  'purchased_entity' => (string) $variation_id,
+                  'quantity' => $qnty, // Amount or quantity to be added to the cart.
+                  'unit_price' => $product_variation->getPrice(),
+               ]);
+               $order_item_option_2->save();
+               $cart_manager->addOrderItem($cart, $order_item_option_2);
+               \Drupal::messenger()->addStatus(t('Product added to the cart.'));
+               setrawcookie('flag3', 0);
+               setcookie("flag3", 0);
+               unset($_COOKIE['flag3']);
+               setcookie('flag3', '', time() - 3600, '/'); // empty value and old timestamp
+            } //if2 end
+         }
+      }
+      //
+      $select = \Drupal::service('database')
+         ->select('webform_submission_data', 'wsd')
+         ->fields('wsd', array('sid'))
+         ->orderBy('wsd.sid', 'DESC')
+         ->condition('wsd.webform_id', 'sim_profile', '=') //webform id
+         //->condition('wsd.name', 'group_type', '=')
+         ->condition('wsd.name', 'partner_name', '=')
+         ->condition('wsd.value', $type, '=') //passing gorup id of the current user
+         ->execute();
+      $results = $select->fetchAll(\PDO::FETCH_COLUMN);
+      $simprofilesubmission = [];
+      foreach ($results as $result) {
+         // Fetch or load records of extracted submission Id
+         if ($result) {
+            $sid = $result;
+            $submission = \Drupal\webform\Entity\WebformSubmission::load($sid);
+            if($submission){
+               $submission_data = $submission->getData();
+               $simprofilesubmission[] = trim($submission_data['sim_profile_name']); //sim profile groupby user
+            }
+         }
+      }
+
+      //loaded current group user from current user group
+      $userStorage = \Drupal::entityTypeManager()->getStorage('user');
+      $query = $userStorage->getQuery();
+      $uids = $query
+         ->condition('status', '1')
+         ->condition('field_group_type', $type)
+         ->execute();
+      $uid = implode(', ', $uids);
+      if ($uid) {
+         $table = 'commerce_order';
+         $table2 = 'commerce_order_item';
+         $database = \Drupal::database();
+         $query = $database->query("SELECT * FROM {$table} where uid in ({$uid}) and state='completed'");
+         $result = $query->fetchAll();
+         $results = [];
+         foreach ($result as $key => $value) {
+            $query2 = $database->query("SELECT * FROM {$table2} where order_id = {$value->order_id} and `flag` = '0'");
+            $result2 = $query2->fetchAll();
+            foreach ($result2 as $key2 => $value2) {
+               $variation = substr($value2->title, strpos($value2->title, ","));
+               $results[] = trim($variation);
+            }
+         }
+      }
+
+      $form['#attached']['library'][] = 'jcius_custom/lineview_libraries';
+      $form['#attached']['drupalSettings']['jcius_custom']['variable3'] = $results;
+      $allvariation = [];
+      $parameter = \Drupal::routeMatch()->getParameter('commerce_product');
+      $product = \Drupal\commerce_product\Entity\Product::load('7');
+      /*Load Product Variations*/
+      $entity_manager = \Drupal::entityTypeManager();
+      $variations = $product->getVariations();
+      $current_product_id = \Drupal::routeMatch()->getParameter('commerce_product')->id();
+
+      if ($current_product_id == '8') {
+         foreach ($variations as $variation) {
+            $grouptype = $variation->get('field_group_id')->value;
+            $profiletype = $variation->get('field_profile_type')->value;
+            $status = $variation->get('status')->value;
+            if (($type == $grouptype) && ('eSIM' == $profiletype) &&($status == 1)) {
+               $allvariation[] = trim($variation->getTitle());
+            }
+         }
+      } else {
+         foreach ($variations as $variation) {
+            $grouptype = $variation->get('field_group_id')->value;
+            $profiletype = $variation->get('field_profile_type')->value;
+            $status = $variation->get('status')->value;
+            if (($type == $grouptype) && ('eSIM' != $profiletype) &&($status == 1)) {
+               $allvariation[] = trim($variation->getTitle());
+            }
+         }
+      }
+      $resultsimandvariation = array_intersect($allvariation, $simprofilesubmission);
+         $form['sim-profile3'] = [
+            '#type' => 'select',
+            '#title' => t('SIM Profiles3'),
+            '#default_value' => 'None',
+            '#required' => TRUE,
+            '#options' => $resultsimandvariation, //common sim profile will get sorted as per group type(product variation and sim profile)
+            '#wrapper_attributes' => [
+                'class' => ['custom-simprofile3-wrapper']
+            ]
+         ];
+      //Add New SIM Profile
+      if (!$resultsimandvariation) {
+            $addnewurl   = Url::fromUserInput('/simprofile');
+            $form['new-sim-profile'] = [
+               '#type' => 'link',
+               '#title' => 'Add New SIM Profile',
+               '#url' => $addnewurl,
+               '#attributes' => [
+                   'target' => '_self',
+                   'class' => '',
+                   'title' => t("Add New SIM Profile"),
+               ],
+             ];
+      }
+   }
+   //simprofile3 end
+   //Slot3 end
+ }
+}
+
+function jcius_custom_views_pre_view($view, $display_id, array &$args) {
+   $user_roles = \Drupal::currentUser()->getRoles();
+   if ($view->id() == 'user_management') {
+      if (in_array('administrator', $user_roles)) {
+         // Remove the contextual filter for admin role.
+       $view->removeHandler($display_id, 'argument', 'field_group_type_target_id');
+       $view->removeHandler($display_id, 'filter', 'roles_target_id'); //adminstrator
+      }
+   }
+
+   if ($view->id() == 'transaction_history_logs') {
+      if (in_array('administrator', $user_roles)) {
+         // Remove the contextual filter for admin role.
+       //$view->removeHandler($display_id, 'argument', 'uid');
+       //$view->removeHandler($display_id, 'filter', 'state'); //draft
+      }
+   }
+}
+
+function jcius_custom_entity_access(\Drupal\Core\Entity\EntityInterface $entity, $operation, \Drupal\Core\Session\AccountInterface $account) {
+  $user_roles = \Drupal::currentUser()->getRoles();
+     if (
+       (in_array('tenant_management', $user_roles)
+       || in_array('esim_admin', $user_roles)
+       || in_array('usim_admin', $user_roles))
+       && !in_array('administrator', $user_roles)
+   ) {
+     // Check if the entity is an order and the operation is 'view'.
+     if ($entity->getEntityTypeId() == 'commerce_order' && $operation == 'view') {  
+       // Get the customer user ID from the order.
+       if ($entity->hasField('uid') && !$entity->get('uid')->isEmpty()) {
+         // Load the user entity associated with the order.
+         $order_user = $entity->get('uid')->entity;
+
+         // Load the current user entity (who is trying to view the order).
+         $current_user = \Drupal\user\Entity\User::load($account->id());
+
+         // Check if both the current user and the order user have the 'field_group_type'.
+         if ($current_user && !$current_user->isAnonymous() && $current_user->hasField('field_group_type') && 
+             $order_user && $order_user->hasField('field_group_type')) {
+           
+           // Get the 'field_group_type' from both the current user and the order user.
+           $current_user_group = $current_user->get('field_group_type')->target_id;
+           $order_user_group = $order_user->get('field_group_type')->target_id;
+           // Check if the group types match.
+           if ($current_user_group === $order_user_group) {
+             return \Drupal\Core\Access\AccessResult::allowed();
+           } 
+           else {
+             return \Drupal\Core\Access\AccessResult::forbidden();
+           }
+         }
+       }
+     }
+  }
+  // For all other cases, return neutral.
+  //return \Drupal\Core\Access\AccessResult::neutral();
+}
+
+/**
+ * Custom validation callback for phone number.
+ */
+function jcius_custom_validate_phone_number(array &$form, FormStateInterface $form_state) {
+   $order = \Drupal::routeMatch()->getParameter('commerce_order');
+   if ($order instanceof OrderInterface) {
+      $phone_number = jcius_custom_get_shipping_address($order);
+      if(!$phone_number){
+         $phone_number = $form_state->getValue(['shipping_information', 'shipping_profile','field_phone_number', 0, 'value']);
+      }
+      //\Drupal::logger('jcius_custom')->notice(print_r($phone_number, TRUE));
+   }
+
+  //$phone_number = $form_state->getValue(['shipping_information', 'shipping_profile','field_phone_number', 0, 'value']);
+
+   if ($phone_number) {
+      // Check if the phone number matches the required format.
+      if (!preg_match('/^\+?[1-9]\d{5,14}$/', $phone_number)) {
+        $form_state->setErrorByName('shipping_information][address][0][field_phone_number', t('The phone number must be a valid phone number. You entered: @phone', ['@phone' => $phone_number]));
+      }
+   } else {
+      $form_state->setErrorByName('shipping_information][address][0][field_phone_number', t('The phone number field is missing. Please add a phone number by clicking the "Edit" button in the Shipping Information tab. You entered: @phone', ['@phone' => $phone_number]));
+   }
+}
+
+function jcius_custom_get_shipping_address(OrderInterface $order) {
+  // Get the shipping profile from the order.
+  //$shipping_profile = $order->get('shipments')->entity->get('shipping_profile')->entity;
+  $shipments = $order->get('shipments');
+   if ($shipments && $shipments->entity) {
+       $shipping_profile_entity = $shipments->entity->get('shipping_profile')->entity;
+       if ($shipping_profile_entity) {
+           $shipping_profile = $shipping_profile_entity;
+       } else {
+           $shipping_profile = null;
+       }
+   } else {
+       $shipping_profile = null;
+   }
+
+  if ($shipping_profile instanceof Profile) {
+      $phone = $shipping_profile->get('field_phone_number')->value;
+      return $phone;
+  } else {
+      return null;
+  }  
+}
+
+function jcius_custom_user_update($account) {
+   $conn = \Drupal\Core\Database\Database::getConnection('default', 'third');
+   $user = \Drupal\user\Entity\User::load($account->id());
+   $username = $user->get('mail')->getString();
+   $name = $user->get('name')->getString();
+   $group_type = $user->get('field_group_type')->target_id;
+   $groups = Group::loadMultiple();
+   $sim_partner_id = 0;
+   foreach ($groups as $group) {
+      $id = $group->id();            
+      if ($group_type == $id) {
+          $label = trim($group->label());
+          $queryp = $conn->select('partner', 'p')
+                      ->fields('p', ['partner_id'])
+                      ->condition('p.partner_name', $label);
+          $resultp = $queryp->execute()->fetchAll();
+          //if ($resultp[0]->partner_id) {
+          if (!empty($resultp) && isset($resultp[0]->partner_id)) {
+            $sim_partner_id = $resultp[0]->partner_id;
+            break;
+          } else {
+            $sim_partner_id = 0;
+          }          
+      }
+   }
+
+   // Connect to the external database
+   try {    
+    $query = $conn->query("update drupal_user set name='".$name."', sim_partner_id=" . $sim_partner_id . " where drupal_user='".$username."'");
+   } catch (Exception $e) {
+      \Drupal::logger('jcius_custom')->notice('Failed to update external DB: @message' . print_r($e->getMessage(), TRUE));
+   }
+}
+
+function jcius_custom_user_insert($account) {
+   $conn = \Drupal\Core\Database\Database::getConnection('default', 'third');
+   $user = \Drupal\user\Entity\User::load($account->id());
+   $username = $user->get('mail')->getString();
+   $name = $user->get('name')->getString();
+   $group_type = $user->get('field_group_type')->target_id;
+   $groups = Group::loadMultiple();
+   $sim_partner_id = 0;
+   foreach ($groups as $group) {
+      $id = $group->id();            
+      if ($group_type == $id) {
+          $label = trim($group->label());
+          $queryp = $conn->select('partner', 'p')
+                      ->fields('p', ['partner_id'])
+                      ->condition('p.partner_name', $label);
+          $resultp = $queryp->execute()->fetchAll();
+          //if ($resultp[0]->partner_id) {
+          if (!empty($resultp) && isset($resultp[0]->partner_id)) {
+            $sim_partner_id = $resultp[0]->partner_id;
+            break;
+          } else {
+            $sim_partner_id = 0;
+          }          
+      }
+   }
+
+   // Connect to the external database
+   try {
+      $query = $conn->select('drupal_user', 'u');
+      $query->fields('u');
+      $query->condition('u.drupal_user', $username);
+      $results = $query->execute()->fetchAll();
+      if(!$results) {
+         $query2 = $conn->query("insert into drupal_user(drupal_user,name,sim_partner_id) values ('".$username."','".$name."',".$sim_partner_id.")");
+      } else {
+         \Drupal::logger('jcius_custom')->notice('Username already exist : ' . $username);
+      }
+   } catch (Exception $e) {
+      \Drupal::logger('jcius_custom')->notice('Failed to insert external DB: @message' . print_r($e->getMessage(), TRUE));
+   }
+}
+
+function jcius_custom_views_query_alter(ViewExecutable $view, QueryPluginBase $query) {
+  if ($view->id() == '10t_usage_log') { // Change 'my_view_id' to your View's ID$query->where
+    $current_time = time();
+    foreach ($query->where as &$where_group) {
+      foreach ($where_group['conditions'] as &$condition) {
+         // 1 Day
+         if ($condition['field'] == '10t_usage.timestamp BETWEEN 0 AND 86400') {
+           $last_24_hours = $current_time - (24 * 60 * 60); 
+           // Convert user input (YYYY-MM-DD) into UNIX timestamp
+           $condition['field'] = '10t_usage.timestamp BETWEEN '.$last_24_hours.' AND '.$current_time;
+         }
+         //1 Week
+         if ($condition['field'] == '10t_usage.timestamp BETWEEN 0 AND 604800') {
+           $last_7_days = $current_time - (7 * 24 * 60 * 60); 
+           $condition['field'] = '10t_usage.timestamp BETWEEN '.$last_7_days.' AND '.$current_time;
+         }
+         //1 Month
+         if ($condition['field'] == '10t_usage.timestamp BETWEEN 0 AND 2592000') {
+           $last_30_days = $current_time - (30 * 24 * 60 * 60);
+           $condition['field'] = '10t_usage.timestamp BETWEEN '.$last_30_days.' AND '.$current_time;
+         }
+         //6 Months
+         if ($condition['field'] == '10t_usage.timestamp BETWEEN 0 AND 15552000') {
+           $last_180_days = $current_time - (180 * 24 * 60 * 60);
+           $condition['field'] = '10t_usage.timestamp BETWEEN '.$last_180_days.' AND '.$current_time;
+         }
+         //1 Year
+         if ($condition['field'] == '10t_usage.timestamp BETWEEN 0 AND 31536000') {
+           $last_365_days = $current_time - (365 * 24 * 60 * 60);
+           $condition['field'] = '10t_usage.timestamp BETWEEN '.$last_365_days.' AND '.$current_time;
+         }
+         //2 Years
+         if ($condition['field'] == '10t_usage.timestamp BETWEEN 0 AND 63072000') {
+           $last_730_days = $current_time - (730 * 24 * 60 * 60);
+           $condition['field'] = '10t_usage.timestamp BETWEEN '.$last_730_days.' AND '.$current_time;
+         }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_update().
+ */
+function jcius_custom_entity_update(\Drupal\Core\Entity\EntityInterface $entity) {
+  // Check if the entity is a Group.
+  if ($entity->getEntityTypeId() === 'group') {
+
+    // Get current group ID.
+    $group_id = $entity->id();
+
+    // Fetch tier-type values from the Group.
+    $field_esim_tier_type = $entity->get('field_esim_tier_type')->target_id ?? NULL;
+    $field_plastic_sim_tier_type = $entity->get('field_plastic_sim_tier_type')->target_id ?? NULL;
+    $field_overlay_sim_tier_type = $entity->get('field_overlay_sim_tier_type')->target_id ?? NULL;
+    $field_esim_reset_tier_type = $entity->get('field_esim_reset_tier_type')->target_id ?? NULL;
+    $field_esim_release_tier_type = $entity->get('field_esim_release_tier_type')->target_id ?? NULL;
+
+    // Load all users having the same group assigned in field_group_type.
+    $user_storage = \Drupal::entityTypeManager()->getStorage('user');
+    $user_ids = $user_storage->getQuery()
+      ->condition('field_group_type', $group_id)
+      ->condition('status', 1) // Optional: only active users
+      ->execute();
+
+    if (!empty($user_ids)) {
+      $users = $user_storage->loadMultiple($user_ids);
+
+      foreach ($users as $user) {
+        // Update tier-type fields to match the group.
+        $user->set('field_esim_tier_type', $field_esim_tier_type);
+        $user->set('field_3_slot_tier_type', $field_plastic_sim_tier_type);
+        $user->set('field_overlay_sim_tier_type', $field_overlay_sim_tier_type);
+        $user->set('field_esim_reset_tier_type', $field_esim_reset_tier_type);
+        $user->set('field_esim_release_tier_type', $field_esim_release_tier_type);
+        $user->save();
+      }
+
+      \Drupal::logger('jcius_custom')->info(
+        'Updated @count users for group ID @gid.',
+        ['@count' => count($user_ids), '@gid' => $group_id]
+      );
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_presave().
+ */
+function jcius_custom_entity_presave(\Drupal\Core\Entity\EntityInterface $entity) {
+  // Only run for user entities.
+  if ($entity->getEntityTypeId() === 'user') {
+    $cgid = $entity->get('field_group_type')->target_id ?? NULL;
+    if ($cgid) {
+      $group = Group::load($cgid);
+      if ($group) {
+        \Drupal::logger('jcius_custom')->info("Syncing user fields from group @gid", ['@gid' => $cgid]);
+
+        // Copy fields from group to user.
+        $entity->set('field_esim_tier_type', $group->get('field_esim_tier_type')->target_id ?? NULL);
+        $entity->set('field_3_slot_tier_type', $group->get('field_plastic_sim_tier_type')->target_id ?? NULL);
+        $entity->set('field_overlay_sim_tier_type', $group->get('field_overlay_sim_tier_type')->target_id ?? NULL);
+        $entity->set('field_esim_reset_tier_type', $group->get('field_esim_reset_tier_type')->target_id ?? NULL);
+        $entity->set('field_esim_release_tier_type', $group->get('field_esim_release_tier_type')->target_id ?? NULL);
+      }
+    }
+  }
+}

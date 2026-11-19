@@ -1,0 +1,6 @@
+name: 'JCIUS simprofile Module'
+type: module
+description: 'JCIUS simprofile'
+core: 8.x
+core_version_requirement: ^8 || ^9
+package: 'Custom'

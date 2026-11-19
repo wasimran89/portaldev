@@ -1,0 +1,6 @@
+usage_10t.admin:
+  title: '10T Usage'
+  route_name: usage_10t.usage_10t_page
+  description: 'View the 10T Usage log.'
+  parent: system.admin_reports
+  weight: 11

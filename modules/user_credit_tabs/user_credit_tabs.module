@@ -1,0 +1,242 @@
+<?php
+use Drupal\group\Entity\Group;
+
+/**
+ * Implements hook_commerce_order_update().
+ */
+function user_credit_tabs_commerce_order_update(\Drupal\commerce_order\Entity\OrderInterface $order) {
+  // Get the previous and current order statuses.
+  $previous_state = $order->original->getState()->value;
+  $current_state = $order->getState()->value;
+
+  // Payment start
+  // Get all payments for the order.
+  $payments = \Drupal::entityTypeManager()
+    ->getStorage('commerce_payment')
+    ->loadByProperties(['order_id' => $order->id()]);
+
+  foreach ($payments as $payment) {
+    /** @var \Drupal\commerce_payment\Entity\PaymentInterface $payment */
+    $state = $payment->getState()->value; // pending, completed, failed, etc.
+
+    // Proceed only if payment is completed.
+    if ($state === 'completed') {
+      // Flag to check required products.
+      $has_credit_product = FALSE;
+
+      // Check order items for product titles.
+      foreach ($order->getItems() as $order_item) {
+        $purchased_entity = $order_item->getPurchasedEntity();
+        if ($purchased_entity) {
+          $title = $purchased_entity->getTitle();
+          if ($title === 'eSIM Reset' || $title === 'eSIM Release') { //unique product title
+            $has_credit_product = TRUE;
+            break;
+          }
+        }
+      }
+
+      // If required product exists and order is still "validation".
+      if ($has_credit_product && $order->getState()->value === 'validation') {
+
+        // Get available transitions for current state.
+        $available_transitions = $order->getState()->getTransitions();
+
+        if (isset($available_transitions['validate'])) {
+          // Apply the "validate" transition (moves validation → completed).
+          $order->getState()->applyTransitionById('validate');
+          $order->save();
+
+          \Drupal::logger('user_credit_tabs')->notice(
+            'Order @order_id moved to Completed because payment @pid is completed.',
+            ['@order_id' => $order->id(), '@pid' => $payment->id()]
+          );
+        }
+      }
+    }
+  }
+  // Payment end
+
+
+  // Check if the order status has changed.
+  if ($previous_state !== $current_state) {
+    // Log the status change.
+    \Drupal::logger('user_credit_tabs')->notice('Order @order_id status changed from @previous_state to @current_state.', [
+      '@order_id' => $order->id(),
+      '@previous_state' => $previous_state,
+      '@current_state' => $current_state,
+    ]);
+
+    // Perform actions based on the order status change.
+    if ($current_state == 'completed') {
+      // Get the user ID from the order.
+      $uid = $order->getCustomerId();
+      // Load the user entity.
+      $user = \Drupal\user\Entity\User::load($uid);
+
+      $cgroup = $user->field_group_type->getValue(); //current user group load
+      //$type = $cgroup[0]['target_id']; //current user group id
+      $group_id = $cgroup[0]['target_id']; //current user group id
+      $group = Group::load($group_id);
+      if ($user) {
+        // Calculate the total quantity of items with specific titles in the order.
+        $total_reset_quantity = 0;
+        $total_release_quantity = 0;
+        $product_titles = [];
+
+        foreach ($order->getItems() as $order_item) {
+          $purchased_entity = $order_item->getPurchasedEntity();
+          
+          if ($purchased_entity) {
+            $product = $purchased_entity->getProduct();
+            if ($product) {
+              $product_title = $product->getTitle();
+              $product_titles[] = $product_title;
+
+              if ($product_title == 'eSIM Reset') {
+                $total_reset_quantity += $order_item->getQuantity();
+              } elseif ($product_title == 'eSIM Release') {
+                $total_release_quantity += $order_item->getQuantity();
+              }
+            }
+          }
+        }
+
+        // Update the user's credits fields if quantities are found.
+        $credits_updated = false;
+
+        if ($total_reset_quantity > 0) {
+          $credits_reset = $group->get('field_credit_reset')->value;
+          $new_credits_reset = $credits_reset + $total_reset_quantity;
+          $group->set('field_credit_reset', $new_credits_reset);
+          $credits_updated = true;
+
+          //credit allotment history start
+          $schema = \Drupal::database()->schema();
+          if ($schema->tableExists('credit_allotment_history')) {
+          $querycah = \Drupal::database()->insert('credit_allotment_history')
+                                          ->fields([
+                                          'from_partner_id',
+                                          'to_partner_id',
+                                          'operation_type',
+                                          'credit_amount',
+                                          'remarks',
+                                          'uid',
+                                          'timestamp'
+                                          ])
+                                          ->values(array(
+                                          $group_id,
+                                          $group_id,
+                                          'eSIM reset credit purchased',
+                                          $total_reset_quantity,
+                                          'PURCHASED',
+                                          $user->id(),
+                                          REQUEST_TIME
+                                          ))
+                                          ->execute();
+          }
+          //credit allotment history end
+
+          // Log the credit update.
+          \Drupal::logger('user_credit_tabs')->notice('Added @quantity credits to user @uid for order @order_id completion for eSIM Reset.', [
+            '@quantity' => $total_reset_quantity,
+            '@uid' => $user->id(),
+            '@order_id' => $order->id(),
+          ]);
+        }
+
+        if ($total_release_quantity > 0) {
+          $credits_release = $group->get('field_credit_release')->value;
+          $new_credits_release = $credits_release + $total_release_quantity;
+          $group->set('field_credit_release', $new_credits_release);
+          $credits_updated = true;
+
+          //credit allotment history start
+          $schema = \Drupal::database()->schema();
+          if ($schema->tableExists('credit_allotment_history')) {
+          $querycah = \Drupal::database()->insert('credit_allotment_history')
+                                          ->fields([
+                                          'from_partner_id',
+                                          'to_partner_id',
+                                          'operation_type',
+                                          'credit_amount',
+                                          'remarks',
+                                          'uid',
+                                          'timestamp'
+                                          ])
+                                          ->values(array(
+                                          $group_id,
+                                          $group_id,
+                                          'eSIM release credit purchased',
+                                          $total_release_quantity,
+                                          'PURCHASED',
+                                          $user->id(),
+                                          REQUEST_TIME
+                                          ))
+                                          ->execute();
+          }
+          //credit allotment history end
+
+          // Log the credit update.
+          \Drupal::logger('user_credit_tabs')->notice('Added @quantity credits to user @uid for order @order_id completion for eSIM Release.', [
+            '@quantity' => $total_release_quantity,
+            '@uid' => $user->id(),
+            '@order_id' => $order->id(),
+          ]);
+        }
+
+        if ($credits_updated) {
+          //$user->save();
+          // Save the entity.
+          $group->save();
+
+          \Drupal::logger('user_credit_tabs')->notice('The group credit has been updated');
+          // Send an email notification.
+          $mailManager = \Drupal::service('plugin.manager.mail');
+          $module = 'user_credit_tabs';
+          $key = 'order_completed';
+          $to = $user->getEmail();
+          $params['message'] = t('Your order @order_id is completed. Credits have been added to your account: eSIM Reset: @reset_quantity, eSIM Release: @release_quantity.', [
+            '@order_id' => $order->id(),
+            '@reset_quantity' => $total_reset_quantity,
+            '@release_quantity' => $total_release_quantity,
+          ]);
+          $langcode = \Drupal::currentUser()->getPreferredLangcode();
+          $send = true;
+          $result = $mailManager->mail($module, $key, $to, $langcode, $params, NULL, $send);
+          if ($result['result'] !== true) {
+            \Drupal::logger('user_credit_tabs')->error('There was a problem sending the email notification for order @order_id.', ['@order_id' => $order->id()]);
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_mail().
+ */
+function user_credit_tabs_mail($key, &$message, $params) {
+  switch ($key) {
+    case 'order_completed':
+      $message['subject'] = t('Order Completed');
+      $message['body'][] = $params['message'];
+      break;
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function user_credit_tabs_theme($existing, $type, $theme, $path) {
+  return [
+    'user_credits' => [
+      'variables' => [
+        'credit_reset' => NULL,
+        'credit_release' => NULL,
+        'user' => NULL,
+      ],
+      'template' => 'user-credits',
+    ],
+  ];
+}

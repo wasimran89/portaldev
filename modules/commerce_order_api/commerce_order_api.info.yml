@@ -1,0 +1,9 @@
+name: 'Commerce Order API'
+type: module
+description: 'Provides a commerce REST API for order creation'
+core_version_requirement: ^9 || ^10
+package: Custom
+dependencies:
+  - drupal:commerce_order
+  - drupal:commerce_product
+  - drupal:commerce_payment

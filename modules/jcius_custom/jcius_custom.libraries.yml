@@ -1,0 +1,16 @@
+lineview_libraries:
+  css:
+    component:
+      css/lineview-dropbutton.css: {}
+    theme:
+      css/jcius_api_key_mask.css: {}
+  js:
+    js/jcius_custom.js: {}
+    js/api-key-toggle.js: {}
+  dependencies:
+   - core/jquery
+   - core/drupal.ajax
+   - core/drupal
+   - core/drupalSettings
+   - core/drupal.dialog
+   - core/jquery.once

@@ -1,0 +1,15 @@
+name: Dashboards webform
+description: 'Webform integration.'
+package: Dashboards
+
+core_version_requirement: ^8 || ^9
+type: module
+
+dependencies:
+- dashboards:dashboards
+- webform:webform
+
+# Information added by Drupal.org packaging script on 2021-05-04
+version: '2.0.0-beta12'
+project: 'dashboards'
+datestamp: 1620145725
