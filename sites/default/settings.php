@@ -831,7 +831,7 @@ $databases['third']['default'] = array (
   'driver' => 'pgsql',
 );
 $settings['config_sync_directory'] = 'sites/default/files/config_MAuI8eXHV-Otzx_fybwhnDoETlL16uBR9B84_eFSZbSczfRrdXAC7oz-N2P6PXrOJzzdXJrQHQ/sync';
-//$config ['system.logging']['error_level'] = 'verbose';
+$config ['system.logging']['error_level'] = 'verbose';
 /**
  * This encryption will be used to encrypt and decrypt values by the encryption
  * module.

@@ -10,7 +10,7 @@ namespace Drupal\last_visited_pages;
 use Drupal\Console\Bootstrap\Drupal;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
 
 /**
  * Subscribes to the kernel request event to completely obliterate the default content.
@@ -26,12 +26,13 @@ class LastVisitedPagesSubscriber implements EventSubscriberInterface {
    * @param \Symfony\Component\HttpKernel\Event\GetResponseEvent $event
    *   The response event.
    */
-  public function checkForPlaces(GetResponseEvent $event) {
+  public function checkForPlaces(RequestEvent $event) {
       // Grab the saved Last Visited Pages.
     $places = \Drupal::state()->get('recent.places') ?: array();
     $request = \Drupal::request();
     $route_match = \Drupal::routeMatch();
     $batchKeyword = "batch";
+    $title = NULL;
     if (strpos($request, $batchKeyword) === false) {
       $title = \Drupal::service('title_resolver')->getTitle($request, $route_match->getRouteObject());
     }
@@ -68,7 +69,7 @@ class LastVisitedPagesSubscriber implements EventSubscriberInterface {
       ->values(array(
         $title,
         $path,
-        REQUEST_TIME,
+        \Drupal::time()->getRequestTime(),
         $uid,
         $ip_address
       ))

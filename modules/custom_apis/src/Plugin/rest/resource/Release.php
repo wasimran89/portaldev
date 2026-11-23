@@ -5,6 +5,7 @@ namespace Drupal\custom_apis\Plugin\rest\resource;
 use Drupal\rest\Plugin\ResourceBase;
 use Drupal\rest\ResourceResponse;
 use Drupal\Core\Database\Database;
+use Drupal\Core\Entity\EntityStorageException;
 use Symfony\Component\HttpFoundation\Response;
 use Drupal\group\Entity\Group;
 /**
@@ -234,7 +235,7 @@ class Release extends ResourceBase
             //sign start
             $path = $endpoint.'/gsma/rsp2/es2plus/user/signin';
             $activity = "SignIn";
-            \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, REQUEST_TIME])->execute();
+            \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, \Drupal::time()->getRequestTime()])->execute();
             //signin end
 
             $res = json_decode($response);
@@ -279,7 +280,7 @@ class Release extends ResourceBase
               //getProfileStatus start
               $path = $endpoint.'/gsma/rsp2/es2plus/getProfileStatus';
               $activity = "Profile Status";
-              \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, REQUEST_TIME])->execute();
+              \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, \Drupal::time()->getRequestTime()])->execute();
               //getProfileStatus end
 
               $data = json_decode($response, true);
@@ -326,12 +327,12 @@ class Release extends ResourceBase
                   //downloadOrder start
                   $path = $endpoint.'/gsma/rsp2/es2plus/downloadOrder';
                   $activity = "Download Order";
-                  \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, REQUEST_TIME])->execute();
+                  \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, \Drupal::time()->getRequestTime()])->execute();
                   //downloadOrder end
 
                   $downloadOrderResponse = json_decode($response, true);
                   $download_status = $downloadOrderResponse['header']['functionExecutionStatus']['status'];
-                } catch (Exception $e) {
+                } catch (\Exception $e) {
                     $downloadOrderResponse = $e->getMessage();
                 }
                 //downloadOrder end
@@ -379,13 +380,13 @@ class Release extends ResourceBase
                   //confirmOrder start
                   $path = $endpoint.'/gsma/rsp2/es2plus/confirmOrder';
                   $activity = "Confirm Order";
-                  \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, REQUEST_TIME])->execute();
+                  \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, \Drupal::time()->getRequestTime()])->execute();
                   //confirmOrder end
 
                   $confirmOrderResponse = json_decode($response, true);
                   $confirm_status = $confirmOrderResponse['header']['functionExecutionStatus']['status'];
 
-                } catch (Exception $e) {
+                } catch (\Exception $e) {
                     $confirmOrderResponse = $e->getMessage();
                 }
                 //confirmOrder end      
@@ -430,7 +431,7 @@ class Release extends ResourceBase
                       1,
                       'RELEASE CREDIT USED',
                       $user->id(),
-                      REQUEST_TIME
+                      \Drupal::time()->getRequestTime()
                       ))
                       ->execute();
                     }

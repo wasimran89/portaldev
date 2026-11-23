@@ -114,7 +114,7 @@ class LastVisitedPagesBlock extends BlockBase {
       ->loadMultiple();
 
       foreach ($formats as $machine_name => $value) {
-        $date_formats[$machine_name] = $this->t('@name format: @date', ['@name' => $value->label(), '@date' => \Drupal::service('date.formatter')->format(REQUEST_TIME, $machine_name)]);
+        $date_formats[$machine_name] = $this->t('@name format: @date', ['@name' => $value->label(), '@date' => \Drupal::service('date.formatter')->format(\Drupal::time()->getRequestTime(), $machine_name)]);
       }
 
       $date_formats['custom'] = $this->t('Custom');

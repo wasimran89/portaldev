@@ -22,6 +22,14 @@ use Symfony\Component\HttpFoundation\RequestStack;
 class InputFileController extends ControllerBase {
   protected $currentUser;
   protected $languageManager;
+
+  /**
+   * The current session.
+   *
+   * @var \Symfony\Component\HttpFoundation\Session\SessionInterface
+   */
+  protected SessionInterface $session;
+  
   /**
    * The default database connection.
    *
@@ -255,7 +263,6 @@ class InputFileController extends ControllerBase {
                   'rpad_offset' =>$data->rpad_offset,
                   'input_file_type' =>$data->input_file_type,
                   'environment' =>$data->environment,
-                  'partner_name' => $output[0]->partner_name,
                 );            
           }          
           

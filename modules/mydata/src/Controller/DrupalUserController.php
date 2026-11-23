@@ -49,8 +49,9 @@ class DrupalUserController extends ControllerBase {
     $base_path = $config->get('domain');
 
     $ids = \Drupal::entityQuery('user')
-    ->condition('status', 1)
-    ->execute();
+          ->accessCheck(TRUE)
+          ->condition('status', 1)
+          ->execute();
 
     $users = User::loadMultiple($ids);
     //Drupal application users

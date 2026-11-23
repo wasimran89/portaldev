@@ -144,7 +144,10 @@ function jcius_master_preprocess_block(&$variables) {
 				$file_object = File::load($result[0]->field_group_logo_target_id);
 			    // way 1
 			    $file_uri = $file_object->uri->value;
-			    $variables['site_logo'] = file_url_transform_relative(file_create_url($file_uri));
+			    $file_url_generator = \Drupal::service('file_url_generator');
+					$variables['site_logo'] = $file_url_generator->transformRelative(
+					  $file_url_generator->generateAbsoluteString($file_uri)
+					);
 			    $variables['#cache']['max-age'] = 0;
 			} else {
 				//Dont change anything if above condition not meet.			

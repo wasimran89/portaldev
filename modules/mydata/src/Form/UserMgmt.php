@@ -156,10 +156,12 @@ class UserMgmt extends FormBase {
         $value = $session->get('drupal_field');
         if ($column == 'field_group_type') {
           $ids = \Drupal::entityQuery('user')
+            ->accessCheck(TRUE)
             ->condition($column, $value, '=')
             ->execute();
         } else {
           $ids = \Drupal::entityQuery('user')
+            ->accessCheck(TRUE)
             ->condition($column, '%' . $value . '%', 'LIKE')
             ->execute();
         }
@@ -175,6 +177,7 @@ class UserMgmt extends FormBase {
         }
       } else {
         $ids = \Drupal::entityQuery('user')
+            ->accessCheck(TRUE)
             //->condition('status', 1)
             //->condition('roles', 'administrator')
             ->execute();
@@ -338,6 +341,7 @@ class UserMgmt extends FormBase {
         foreach ($names as $key => $value) {
           try {  
                 $ids = \Drupal::entityQuery('user')
+                    ->accessCheck(TRUE)
                     ->condition('mail',$value['username'])
                     ->execute();
                 $users = User::loadMultiple($ids);

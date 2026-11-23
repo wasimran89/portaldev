@@ -4,7 +4,7 @@ base theme: graphics_zymphonies_theme
 description: jcius master theme
 package: Custom
 core: 8.x
-core_version_requirement: ^8 || ^9
+core_version_requirement: ^8 || ^9 || ^10 || ^11
 libraries:
   - jcius_master/global
   - jcius_master/color

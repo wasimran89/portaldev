@@ -148,7 +148,7 @@ class PreprodResetForm extends FormBase {
       //sign start
       $path = $endpoint.'/gsma/rsp2/es2plus/user/signin';
       $activity = "SignIn";
-      \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, REQUEST_TIME])->execute();
+      \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, \Drupal::time()->getRequestTime()])->execute();
       //signin end
 
       $result = json_decode($response);
@@ -196,7 +196,7 @@ class PreprodResetForm extends FormBase {
           //releaseProfile start
           $path = $endpoint.'/gsma/rsp2/es2plus/releaseProfile';
           $activity = "Release Profile";
-          \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, REQUEST_TIME])->execute();
+          \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, \Drupal::time()->getRequestTime()])->execute();
           //releaseProfile end
 
           $data = json_decode($response, true);
@@ -204,7 +204,7 @@ class PreprodResetForm extends FormBase {
           $release_items = '<li class="logs-li"><strong class="logs-strong">Release Profile</strong>'.$data['header']['functionExecutionStatus']['status'].'</li>';
           //$release_items = $data['header']['functionExecutionStatus']['status'];
           //echo "Status: " . $status; //Executed-Success
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             //$release_items = $e->getMessage();
             $release_items = '<li class="logs-li"><strong class="logs-strong">Release Profile</strong>'.$e->getMessage().'</li>';
         }
@@ -252,13 +252,13 @@ class PreprodResetForm extends FormBase {
           //cancelOrder start
           $path = $endpoint.'/gsma/rsp2/es2plus/cancelOrder';
           $activity = "Cancel Order";
-          \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, REQUEST_TIME])->execute();
+          \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, \Drupal::time()->getRequestTime()])->execute();
           //cancelOrder end
 
           $data = json_decode($response, true);
           $cancel_items = '<li class="logs-li"><strong class="logs-strong">Cancel Order</strong>'.$data['header']['functionExecutionStatus']['status'].'</li>';
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             //$cancel_items = $e->getMessage();
             $cancel_items = '<li class="logs-li"><strong class="logs-strong">Cancel Order</strong>'.$e->getMessage().'</li>';
         }
@@ -305,14 +305,14 @@ class PreprodResetForm extends FormBase {
           //downloadOrder start
           $path = $endpoint.'/gsma/rsp2/es2plus/downloadOrder';
           $activity = "Download Order";
-          \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, REQUEST_TIME])->execute();
+          \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, \Drupal::time()->getRequestTime()])->execute();
           //downloadOrder end
 
           $data = json_decode($response, true);
 
           $download_items = '<li class="logs-li"><strong class="logs-strong">Download Profile</strong>'.$data['header']['functionExecutionStatus']['status'].'</li>';
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             //$download_items = $e->getMessage();
             $download_items = '<li class="logs-li"><strong class="logs-strong">Download Profile</strong>'.$e->getMessage().'</li>';
         }
@@ -360,14 +360,14 @@ class PreprodResetForm extends FormBase {
           //confirmOrder start
           $path = $endpoint.'/gsma/rsp2/es2plus/confirmOrder';
           $activity = "Confirm Order";
-          \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, REQUEST_TIME])->execute();
+          \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, \Drupal::time()->getRequestTime()])->execute();
           //confirmOrder end
 
           $data = json_decode($response, true);
           $status = $data['header']['functionExecutionStatus']['status'];
           $confirm_items = '<li class="logs-li"><strong class="logs-strong">Confirm Order</strong>'.$data['header']['functionExecutionStatus']['status'].'</li></ul>';
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             //$confirm_items = $e->getMessage();
             $confirm_items = '<li class="logs-li"><strong class="logs-strong">Confirm Order</strong>'.$e->getMessage().'</li></ul>';
         }

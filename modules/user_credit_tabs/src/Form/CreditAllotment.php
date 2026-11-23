@@ -394,7 +394,7 @@ class CreditAllotment extends FormBase {
                                                       $value4['credit_release'],
                                                       'RELEASE ALLOTMENT',
                                                       $user->id(),
-                                                      REQUEST_TIME
+                                                      \Drupal::time()->getRequestTime()
                                                     ))
                                                     ->execute();
                     }
@@ -464,7 +464,7 @@ class CreditAllotment extends FormBase {
                                       $value4['credit_reset'],
                                       'RESET ALLOTMENT',
                                       $user->id(),
-                                      REQUEST_TIME
+                                      \Drupal::time()->getRequestTime()
                                     ))
                                     ->execute();
                     }

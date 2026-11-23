@@ -31,6 +31,14 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class DisplayTable extends FormBase {
   protected $currentUser;
   protected $languageManager;
+
+  /**
+   * The current session.
+   *
+   * @var \Symfony\Component\HttpFoundation\Session\SessionInterface
+   */
+  protected SessionInterface $session;
+  
   /**
    * The default database connection.
    *
@@ -73,7 +81,7 @@ class DisplayTable extends FormBase {
     $this->currentUser = $current_user;
     $this->defaultDatabase = $defaultConnection;
     $this->externalDatabase = $externalConnection;
-    $this->languagemanager = $languageManager;
+    $this->languageManager = $languageManager;
     $this->session = $session;
     $this->pagerManager = $pagerManager;
     $this->request = $request_stack->getCurrentRequest();
@@ -175,7 +183,7 @@ class DisplayTable extends FormBase {
     $info_param = isset($str->$r->info_param) ? $str->$r->info_param : null;
     $results = [];
     $export = [];
-    $current_language_id = $this->languagemanager->getCurrentLanguage()->getId();
+    $current_language_id = $this->languageManager->getCurrentLanguage()->getId();
     if ($current_language_id=='en') {
       $header_alias = $str->$r->alias_en;
       $title = isset($str->$r->title_en) ? $str->$r->title_en : NULL;
@@ -1973,7 +1981,7 @@ class DisplayTable extends FormBase {
     //sign start
     $path = $endpoint.'/gsma/rsp2/es2plus/user/signin';
     $activity = "SignIn";
-    \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values(["-", $path, $activity, $uid, REQUEST_TIME])->execute();
+    \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values(["-", $path, $activity, $uid, \Drupal::time()->getRequestTime()])->execute();
     //signin end
 
     $resulttoken = json_decode($response);
@@ -2024,7 +2032,7 @@ class DisplayTable extends FormBase {
                 //getProfileStatus start
                 $path = $endpoint.'/gsma/rsp2/es2plus/getProfileStatus';
                 $activity = "Profile Status";
-                \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, REQUEST_TIME])->execute();
+                \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, \Drupal::time()->getRequestTime()])->execute();
                 //getProfileStatus end
 
                 $data = json_decode($response, true);

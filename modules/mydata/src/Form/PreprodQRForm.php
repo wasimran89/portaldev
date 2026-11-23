@@ -123,7 +123,7 @@ class PreprodQRForm extends FormBase {
     //sign start
     $path = $endpoint.'/gsma/rsp2/es2plus/user/signin';
     $activity = "SignIn";
-    \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, REQUEST_TIME])->execute();
+    \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, \Drupal::time()->getRequestTime()])->execute();
     //signin end
 
     $result = json_decode($response);
@@ -171,7 +171,7 @@ class PreprodQRForm extends FormBase {
       //getQrCode start
       $path = $endpoint.'/gsma/rsp2/es2plus/getQrCode';
       $activity = "QR Code";
-      \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, REQUEST_TIME])->execute();
+      \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, \Drupal::time()->getRequestTime()])->execute();
       //getQrCode end
 
       $data = json_decode($response, true);
@@ -237,7 +237,7 @@ class PreprodQRForm extends FormBase {
       //getQrUri start
       $path = $endpoint.'/gsma/rsp2/es2plus/getQrCode';
       $activity = "QR URI";
-      \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, REQUEST_TIME])->execute();
+      \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, \Drupal::time()->getRequestTime()])->execute();
       //getQrUri end
 
       $datanew = json_decode($responsenew, true);
@@ -268,7 +268,7 @@ class PreprodQRForm extends FormBase {
                           $iccid,
                           $activity,
                           $uid,
-                          REQUEST_TIME
+                          \Drupal::time()->getRequestTime()
                         ))
                         ->execute();
       //qr viewed end
@@ -448,7 +448,7 @@ class PreprodQRForm extends FormBase {
                                 $iccid,
                                 $activity,
                                 $uid,
-                                REQUEST_TIME
+                                \Drupal::time()->getRequestTime()
                               ))
                               ->execute();
 
@@ -487,7 +487,7 @@ class PreprodQRForm extends FormBase {
                             $iccid,
                             $activity,
                             $uid,
-                            REQUEST_TIME
+                            \Drupal::time()->getRequestTime()
                           ))
                           ->execute();
         $encoded_content = base64_encode($field['qr_uri_value']);
@@ -540,7 +540,7 @@ class PreprodQRForm extends FormBase {
                             $iccid,
                             $activity,
                             $uid,
-                            REQUEST_TIME
+                            \Drupal::time()->getRequestTime()
                           ))
                           ->execute();
         

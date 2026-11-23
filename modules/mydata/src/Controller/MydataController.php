@@ -88,9 +88,12 @@ class MydataController extends ControllerBase {
       '#empty' => t('No content has been found.'),
       '#cache' => array('max-age' => 0)
     ];
+
+    $renderer = \Drupal::service('renderer');
+
     return [
       '#type' => '#markup',
-      '#markup' => render($build)
+      '#markup' => $renderer->render($build)
     ];
   }
 

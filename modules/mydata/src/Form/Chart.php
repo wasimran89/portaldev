@@ -24,6 +24,14 @@ use Drupal\user\Entity\User;
 class Chart extends FormBase {
   protected $currentUser;
   protected $languageManager;
+
+  /**
+   * The current session.
+   *
+   * @var \Symfony\Component\HttpFoundation\Session\SessionInterface
+   */
+  protected SessionInterface $session;
+  
   /**
    * The default database connection.
    *

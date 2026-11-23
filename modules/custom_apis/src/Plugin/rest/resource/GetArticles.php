@@ -9,6 +9,7 @@ use Drupal\taxonomy\Entity\Term;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Url;
 use Drupal\Core\Link;
+use Drupal\Core\Entity\EntityStorageException;
 
 use Symfony\Component\HttpFoundation\Response;
 

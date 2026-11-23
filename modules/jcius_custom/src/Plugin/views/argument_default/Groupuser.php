@@ -156,6 +156,7 @@ class Groupuser extends ArgumentDefaultPluginBase implements CacheableDependency
 
       if (in_array('administrator', $roles)) {
         $uids = $query
+        ->accessCheck(TRUE)
         ->condition('status', '1')
         ->execute();
         $uid = implode(', ', $uids);
@@ -164,6 +165,7 @@ class Groupuser extends ArgumentDefaultPluginBase implements CacheableDependency
           $group_ids= 0;
         }
         $uids = $query
+        ->accessCheck(TRUE)
         ->condition('status', '1')
         ->condition('field_group_type', $group_ids, 'IN')
         ->execute();

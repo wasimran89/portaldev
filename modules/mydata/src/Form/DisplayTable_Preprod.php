@@ -33,6 +33,14 @@ use Drupal\file\Entity\File;
 class DisplayTable_Preprod extends FormBase {
   protected $currentUser;
   protected $languageManager;
+
+  /**
+   * The current session.
+   *
+   * @var \Symfony\Component\HttpFoundation\Session\SessionInterface
+   */
+  protected SessionInterface $session;
+  
   /**
    * The default database connection.
    *
@@ -75,7 +83,7 @@ class DisplayTable_Preprod extends FormBase {
     $this->currentUser = $current_user;
     $this->defaultDatabase = $defaultConnection;
     $this->externalDatabase = $externalConnection;
-    $this->languagemanager = $languageManager;
+    $this->languageManager = $languageManager;
     $this->session = $session;
     $this->pagerManager = $pagerManager;
     $this->request = $request_stack->getCurrentRequest();
@@ -170,7 +178,7 @@ class DisplayTable_Preprod extends FormBase {
     $info_param = isset($str->$r->info_param) ? $str->$r->info_param : null;
     $results = [];
     $export = [];
-    $current_language_id = $this->languagemanager->getCurrentLanguage()->getId();
+    $current_language_id = $this->languageManager->getCurrentLanguage()->getId();
     if ($current_language_id=='en') {
       $header_alias = $str->$r->alias_en;
      $title = isset($str->$r->title_en) ? $str->$r->title_en : NULL;

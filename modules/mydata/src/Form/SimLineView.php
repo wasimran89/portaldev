@@ -24,6 +24,14 @@ use Drupal\user\Entity\User;
 class SimLineView extends FormBase {
   protected $currentUser;
   protected $languageManager;
+
+  /**
+   * The current session.
+   *
+   * @var \Symfony\Component\HttpFoundation\Session\SessionInterface
+   */
+  protected SessionInterface $session;
+
   /**
    * The default database connection.
    *
@@ -221,6 +229,7 @@ class SimLineView extends FormBase {
       $webform = \Drupal\webform\Entity\Webform::load('hss_profile');
       if ($webform->hasSubmissions()) {
         $query = \Drupal::entityQuery('webform_submission')
+          ->accessCheck(TRUE)
           ->condition('webform_id', 'hss_profile');
         $result = $query->execute();
         $submission_data = [];
@@ -425,7 +434,7 @@ class SimLineView extends FormBase {
     }
         
     $header_column = ["iccid"=>"iccid","imsi"=>"imsi","masterid"=>"masterid","partner_id"=>"partner_id","profile"=>"profile","orderid"=>"orderid","locationid"=>"locationid","simtype"=>"simtype","isactive"=>"isactive","issuspend"=>"issuspend"];
-
+    $rowPiece = [];
     if ($result) {
       $rows = [];
       foreach ($result as $key => $value) {   
@@ -471,7 +480,8 @@ class SimLineView extends FormBase {
                 $url->setOptions($link_options);
                 $rows[$key]['issuspend'] = Link::fromTextAndUrl(' ', $url->setOptions($link_options))->toString();
         }
-      }   
+      }
+      
       $rowPiece = $this->pagerArray($rows, 10);
 
       //remve key value 0 because it is considering in submission

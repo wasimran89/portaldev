@@ -73,7 +73,7 @@
         "drupal/webform_entity_handler": "^2.0@beta",
         "drupal/webform_rest": "^4.1",
         "drupal/webform_views": "^5.0@alpha",
-        "drush/drush": "~10",
+        "drush/drush": "^11.6",
         "league/csv": "^9.18",
         "phpoffice/phpspreadsheet": "^1.24"
     },

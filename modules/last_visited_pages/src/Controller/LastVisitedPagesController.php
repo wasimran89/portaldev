@@ -139,8 +139,10 @@ class LastVisitedPagesController extends ControllerBase {
    * {@inheritdoc}
    */
   public function defaultConfiguration() {
-    $this->configuration['num_places'] = 50;
-    return ['label_display' => FALSE];
+    return [
+      'label_display' => FALSE,
+      'num_places' => 50,
+    ];
   }
 
   public function buildContent(UserInterface $user = NULL) {
@@ -212,8 +214,8 @@ class LastVisitedPagesController extends ControllerBase {
     if (isset($last_visited_pages)) {
       $output = '';
 
-      if ($this->configuration['label_display']) {
-        $output .= $this->t('<h2>' . $this->label() . '</h2>');
+      if (!empty($this->configuration['label_display'])) {
+        $output .= $this->t('<h2>Last Visited Pages</h2>');
       }
 
       $output .= '<ul class="last-visited-pages">' . $last_visited_pages . '</ul>';

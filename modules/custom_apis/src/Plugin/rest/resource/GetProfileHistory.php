@@ -5,6 +5,7 @@ namespace Drupal\custom_apis\Plugin\rest\resource;
 use Drupal\rest\Plugin\ResourceBase;
 use Drupal\rest\ResourceResponse;
 use Drupal\Core\Database\Database;
+use Drupal\Core\Entity\EntityStorageException;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -210,7 +211,7 @@ class GetProfileHistory extends ResourceBase
           //sign start
           $path = $endpoint.'/gsma/rsp2/es2plus/user/signin';
           $activity = "SignIn";
-          \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, REQUEST_TIME])->execute();
+          \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, \Drupal::time()->getRequestTime()])->execute();
           //signin end
 
           $res = json_decode($response);
@@ -256,7 +257,7 @@ class GetProfileHistory extends ResourceBase
             //getProfileHistory start
             $path = $endpoint.'/gsma/rsp2/es2plus/getProfileHistory';
             $activity = "Profile History";
-            \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, REQUEST_TIME])->execute();
+            \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, \Drupal::time()->getRequestTime()])->execute();
             //getProfileHistory end
 
             $dataoutput = json_decode($responseresult, true);

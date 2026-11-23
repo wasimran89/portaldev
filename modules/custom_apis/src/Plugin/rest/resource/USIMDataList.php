@@ -136,7 +136,6 @@ class USIMDataList extends ResourceBase {
       // Return the response
       return $response;
     } catch (\Exception $e) {
-      $iccid = $data['iccid'];
       \Drupal::logger('custom_apis')->error($e->getMessage());
       $responseresult = '{ "header": { "functionExecutionStatus": { "status": "Failed" } },"message": "'.$e->getMessage().'" }';
       $dataoutput = json_decode($responseresult, true);

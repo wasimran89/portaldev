@@ -149,7 +149,7 @@ class PreprodReleaseForm extends FormBase {
       //sign start
       $path = $endpoint.'/gsma/rsp2/es2plus/user/signin';
       $activity = "SignIn";
-      \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, REQUEST_TIME])->execute();
+      \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, \Drupal::time()->getRequestTime()])->execute();
       //signin end
 
       $result = json_decode($response);
@@ -195,14 +195,14 @@ class PreprodReleaseForm extends FormBase {
           //downloadOrder start
           $path = $endpoint.'/gsma/rsp2/es2plus/downloadOrder';
           $activity = "Download Order";
-          \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, REQUEST_TIME])->execute();
+          \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, \Drupal::time()->getRequestTime()])->execute();
           //downloadOrder end
 
           $data = json_decode($response, true);
           $items = '<h3 class="iccid-header">' . $iccid . '</h3><ul class="logs-ul">';
           $download_items = '<li class="logs-li"><strong class="logs-strong">Download Profile</strong>'.$data['header']['functionExecutionStatus']['status'].'</li>';
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             //$download_items = $e->getMessage();
             $download_items = '<li class="logs-li"><strong class="logs-strong">Download Profile</strong>'.$e->getMessage().'</li>';
         }
@@ -250,14 +250,14 @@ class PreprodReleaseForm extends FormBase {
           //confirmOrder start
           $path = $endpoint.'/gsma/rsp2/es2plus/confirmOrder';
           $activity = "Confirm Order";
-          \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, REQUEST_TIME])->execute();
+          \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, \Drupal::time()->getRequestTime()])->execute();
           //confirmOrder end
 
           $data = json_decode($response, true);
           $status = $data['header']['functionExecutionStatus']['status'];
           $confirm_items = '<li class="logs-li"><strong class="logs-strong">Confirm Order</strong>'.$data['header']['functionExecutionStatus']['status'].'</li></ul>';
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $confirm_items = '<li class="logs-li"><strong class="logs-strong">Confirm Order</strong>'.$e->getMessage().'</li></ul>';
         }
         //confirmOrder end      

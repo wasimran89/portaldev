@@ -187,7 +187,6 @@ class EsimGenerate extends FormBase {
     $form['imsi_start'] = array(
       '#type' => 'textfield',
       '#title' => t('IMSI Start'),
-      '#description' => 'The Entered value must be numeric and length 15',
       '#description' => array(
                         '#markup' => '<div class="imsi_start_desc">The Entered value must be numeric and length 15</div>',
                       ),

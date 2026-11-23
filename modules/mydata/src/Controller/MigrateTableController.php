@@ -52,6 +52,7 @@ class MigrateTableController extends ControllerBase {
       $result = $query->fetchAll();
       foreach ($result as $key => $value) {
         $ids = \Drupal::entityQuery('user')
+              ->accessCheck(TRUE)
               ->condition('mail', $value->email)
               ->execute();
         if (!empty($ids)) {

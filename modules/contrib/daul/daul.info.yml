@@ -1,7 +1,0 @@
-name: Domain Access Unique Logo
-type: module
-description: 'Enable utility to upload unique logo for each domain'
-core_version_requirement: ^8 || ^9
-package: Domain modules
-dependencies:
-  - domain:domain

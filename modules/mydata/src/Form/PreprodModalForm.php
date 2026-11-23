@@ -126,7 +126,7 @@ class PreprodModalForm extends FormBase {
     //sign start
     $path = $endpoint.'/gsma/rsp2/es2plus/user/signin';
     $activity = "SignIn";
-    \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, REQUEST_TIME])->execute();
+    \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, \Drupal::time()->getRequestTime()])->execute();
     //signin end
 
     $result = json_decode($response);
@@ -172,7 +172,7 @@ class PreprodModalForm extends FormBase {
       //getProfileHistory start
       $path = $endpoint.'/gsma/rsp2/es2plus/getProfileHistory';
       $activity = "Profile History";
-      \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, REQUEST_TIME])->execute();
+      \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, \Drupal::time()->getRequestTime()])->execute();
       //getProfileHistory end
 
       $data = json_decode($response, true);
@@ -240,7 +240,7 @@ class PreprodModalForm extends FormBase {
         //getProfileStatus start
         $path = $endpoint.'/gsma/rsp2/es2plus/getProfileStatus';
         $activity = "Profile Status";
-        \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, REQUEST_TIME])->execute();
+        \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, \Drupal::time()->getRequestTime()])->execute();
         //getProfileStatus end
         
         $dataps = json_decode($response, true);

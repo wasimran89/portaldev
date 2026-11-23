@@ -30,6 +30,14 @@ class EsimFileDetailModalForm extends FormBase {
   protected $currentUser;
 
   protected $languageManager;
+
+  /**
+   * The current session.
+   *
+   * @var \Symfony\Component\HttpFoundation\Session\SessionInterface
+   */
+  protected SessionInterface $session;
+  
   /**
    * The default database connection.
    *

@@ -131,7 +131,7 @@ function user_credit_tabs_commerce_order_update(\Drupal\commerce_order\Entity\Or
                                           $total_reset_quantity,
                                           'PURCHASED',
                                           $user->id(),
-                                          REQUEST_TIME
+                                          \Drupal::time()->getRequestTime()
                                           ))
                                           ->execute();
           }
@@ -171,7 +171,7 @@ function user_credit_tabs_commerce_order_update(\Drupal\commerce_order\Entity\Or
                                           $total_release_quantity,
                                           'PURCHASED',
                                           $user->id(),
-                                          REQUEST_TIME
+                                          \Drupal::time()->getRequestTime()
                                           ))
                                           ->execute();
           }

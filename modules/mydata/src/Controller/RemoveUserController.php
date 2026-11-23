@@ -1,61 +1,97 @@
 <?php
-//oss second setting used
+
 namespace Drupal\mydata\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
-use  \Drupal\user\Entity\User;
+use Drupal\user\Entity\User;
+
 /**
- * Class DisplayTableController.
- *
- * @package Drupal\mydata\Controller
+ * Controller for removing users from the email list.
  */
 class RemoveUserController extends ControllerBase {
 
-
-  public function getContent() {
-    // First we'll tell the user what's going on. This content can be found
-    // in the twig template file: templates/description.html.twig.
-    // @todo: Set up links to create nodes and point to devel module.
-    $build = [
+  /**
+   * Displays the description page.
+   *
+   * @return array
+   *   A render array.
+   */
+  public function getContent(): array {
+    return [
       'description' => [
         '#theme' => 'mydata_description',
         '#description' => 'foo',
         '#attributes' => [],
       ],
     ];
-    return $build;
   }
 
   /**
-   * Display.
+   * Removes users whose email addresses exist in the text file.
    *
-   * @return string
-   *   Return Hello string.
+   * @return array
+   *   A render array containing the deletion result.
    */
-  public function display() {
-  $ids = \Drupal::entityQuery('user')->execute();
-    $users = User::loadMultiple($ids);
-    $arrfields = explode("\n", file_get_contents('/var/www/html/usim-webportal/remove_user_emails.txt'));
-    //echo "<pre>";
-    //print_r($arrfields);
-    //exit;   
-    $useremail = [];
-    foreach($users as $user) {        
-      $useremail[] = $user->getEmail();
+  public function display(): array {
+
+    $file_path = '/var/www/html/usim-webportal/remove_user_emails.txt';
+
+    // Check whether the email file exists.
+    if (!file_exists($file_path) || !is_readable($file_path)) {
+      return [
+        '#markup' => $this->t('Email file does not exist or is not readable.'),
+      ];
     }
-    //echo "<pre>";
-    //print_r($useremail);
-    //exit;
-    $result = array_intersect($arrfields,$useremail);
-    //echo "<pre>";
-    //print_r($result);
-    //exit;
-    foreach ($result as $key => $value) {
-      foreach($users as $user) {        
-        if($user->getEmail()==$value){
-          $user->delete();
-        }
+
+    // Read and clean email addresses.
+    $email_list = file(
+      $file_path,
+      FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES
+    );
+
+    $email_list = array_filter(array_map(
+      static fn($email) => strtolower(trim($email)),
+      $email_list
+    ));
+
+    if (empty($email_list)) {
+      return [
+        '#markup' => $this->t('No email addresses found in the file.'),
+      ];
+    }
+
+    // Create a lookup array for faster email matching.
+    $email_lookup = array_fill_keys($email_list, TRUE);
+
+    // Explicitly disable access checks for this administrative cleanup.
+    $ids = \Drupal::entityQuery('user')
+      ->accessCheck(FALSE)
+      ->execute();
+
+    $users = User::loadMultiple($ids);
+
+    $deleted_count = 0;
+
+    foreach ($users as $user) {
+
+      // Protect the Drupal superuser account (UID 1).
+      if ($user->id() == 1) {
+        continue;
+      }
+
+      $email = strtolower(trim($user->getEmail()));
+
+      if (isset($email_lookup[$email])) {
+        $user->delete();
+        $deleted_count++;
       }
     }
-  }//display function
-} //DisplayTableController
+
+    return [
+      '#markup' => $this->t('@count user account(s) deleted successfully.', [
+        '@count' => $deleted_count,
+      ]),
+    ];
+  }
+
+}

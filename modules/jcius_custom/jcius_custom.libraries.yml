@@ -13,4 +13,4 @@ lineview_libraries:
    - core/drupal
    - core/drupalSettings
    - core/drupal.dialog
-   - core/jquery.once
+   - core/once

@@ -6,11 +6,10 @@ use Drupal\rest\Plugin\ResourceBase;
 use Drupal\rest\ResourceResponse;
 use Drupal\node\Entity\Node;
 use Drupal\taxonomy\Entity\Term;
-
 use Drupal\Core\Database\Database;
 use Drupal\Core\Url;
 use Drupal\Core\Link;
-
+use Drupal\Core\Entity\EntityStorageException;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -169,7 +168,7 @@ class ReleaseProfile extends ResourceBase
           //sign start
           $path = $endpoint.'/gsma/rsp2/es2plus/user/signin';
           $activity = "SignIn";
-          \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, REQUEST_TIME])->execute();
+          \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, \Drupal::time()->getRequestTime()])->execute();
           //signin end
 
           $res = json_decode($response);
@@ -216,7 +215,7 @@ class ReleaseProfile extends ResourceBase
             //releaseProfile start
             $path = $endpoint.'/gsma/rsp2/es2plus/releaseProfile';
             $activity = "Release Profile";
-            \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, REQUEST_TIME])->execute();
+            \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, \Drupal::time()->getRequestTime()])->execute();
             //releaseProfile end
 
             $dataoutput = json_decode($responseresult, true);

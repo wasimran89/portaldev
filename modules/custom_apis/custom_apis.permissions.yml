@@ -1,0 +1,35 @@
+restful get cancelorderfinal:
+  title: 'RESTful GET Cancel Order Final'
+  description: 'Allows access to the cancel order final GET endpoint.'
+
+restful get cancelorderreset:
+  title: 'RESTful GET Cancel Order Reset'
+  description: 'Allows access to the cancel order reset GET endpoint.'
+
+restful patch cancelorderfinal:
+  title: 'RESTful PATCH Cancel Order Final'
+  description: 'Allows access to the cancel order final PATCH endpoint.'
+
+restful patch cancelorderreset:
+  title: 'RESTful PATCH Cancel Order Reset'
+  description: 'Allows access to the cancel order reset PATCH endpoint.'
+
+restful patch esimdata:
+  title: 'RESTful PATCH eSIM Data'
+  description: 'Allows updating eSIM data.'
+
+restful patch getprofileinfo:
+  title: 'RESTful PATCH Get Profile Info'
+  description: 'Allows access to the profile information PATCH endpoint.'
+
+restful post esimdata:
+  title: 'RESTful POST eSIM Data'
+  description: 'Allows creating eSIM data.'
+
+create cisco group:
+  title: 'Create Cisco Group'
+  description: 'Allows creating Cisco groups.'
+
+restful post getsimprofile:
+  title: 'RESTful POST Get SIM Profile'
+  description: 'Allows access to the get SIM profile endpoint.'

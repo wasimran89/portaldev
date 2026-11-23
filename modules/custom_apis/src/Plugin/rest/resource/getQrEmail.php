@@ -5,6 +5,7 @@ namespace Drupal\custom_apis\Plugin\rest\resource;
 use Drupal\rest\Plugin\ResourceBase;
 use Drupal\rest\ResourceResponse;
 use Drupal\Core\Database\Database;
+use Drupal\Core\Entity\EntityStorageException;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -213,7 +214,7 @@ class getQrEmail extends ResourceBase
               //sign start
               $path = $endpoint.'/gsma/rsp2/es2plus/user/signin';
               $activity = "SignIn";
-              \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, REQUEST_TIME])->execute();
+              \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, \Drupal::time()->getRequestTime()])->execute();
               //signin end
 
               $res = json_decode($response);
@@ -265,13 +266,13 @@ class getQrEmail extends ResourceBase
 
                   //qr viewed start
                   $activityqr = 'via API call :  QR code sent to : '.$data['email'];
-                  \Drupal::database()->insert('qr_activity_log')->fields(['iccid', 'activity', 'uid','timestamp'])->values(array($iccid,$activityqr, $uid, REQUEST_TIME))->execute();
+                  \Drupal::database()->insert('qr_activity_log')->fields(['iccid', 'activity', 'uid','timestamp'])->values(array($iccid,$activityqr, $uid, \Drupal::time()->getRequestTime()))->execute();
                   //qr viewed end
 
                   //getQrCode start
                   $path = $endpoint.'/gsma/rsp2/es2plus/getQrCode';
                   $activity = "QR Email";
-                  \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, REQUEST_TIME])->execute();
+                  \Drupal::database()->insert('10t_usage')->fields(['iccid', 'path', 'activity', 'uid', 'timestamp'])->values([$iccid, $path, $activity, $uid, \Drupal::time()->getRequestTime()])->execute();
                   //getQrCode end
                 
                   $qrdata = $dataoutput['data'];

@@ -26,6 +26,13 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 class DisplayTableController2 extends ControllerBase {
   protected $currentUser;
   protected $languagemanager;
+
+  /**
+   * The current session.
+   *
+   * @var \Symfony\Component\HttpFoundation\Session\SessionInterface
+   */
+  protected SessionInterface $session;
   /**
    * The default database connection.
    *
@@ -352,7 +359,7 @@ class DisplayTableController2 extends ControllerBase {
 
       //Only applicable for esim_10t_status_view table
       if (isset($r) && $r == 'esim_10t_status_vw') {
-        if ((!in_array('administrator', $roles)) || ($resultc[0]->count)) {
+        if (!in_array('administrator', $roles)) {
           $query->condition('m.partner_id', $all_related_partners, 'IN');
         } else {
           $query->condition('m.partner_id', $resultuser[0]->sim_partner_id, '=');
@@ -696,7 +703,7 @@ class DisplayTableController2 extends ControllerBase {
                 ),
               );
               $urlk4->setOptions($link_options_k4);
-              $results[$key]['k4'] = Link::fromTextAndUrl(' ', $urlk4->setOptions($link_options_opk4))->toString();
+              $results[$key]['k4'] = Link::fromTextAndUrl(' ', $urlk4->setOptions($link_options_k4))->toString();
           }
 
           //json_secrets checkbox true

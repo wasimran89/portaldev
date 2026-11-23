@@ -23,6 +23,13 @@ use Symfony\Component\HttpFoundation\RequestStack;
 class DisplayPreprodTableController2 extends ControllerBase {
   protected $currentUser;
   protected $languageManager;
+
+  /**
+   * The current session.
+   *
+   * @var \Symfony\Component\HttpFoundation\Session\SessionInterface
+   */
+  protected $session;
   /**
    * The default database connection.
    *
@@ -132,20 +139,18 @@ class DisplayPreprodTableController2 extends ControllerBase {
     $data = [];
     $current_language_id = $this->languageManager->getCurrentLanguage()->getId();
     //$language = \Drupal::languageManager()->getCurrentLanguage()->getId();
-    if($current_language_id=='en'){
+    if ($current_language_id=='en') {
       $header_alias = $str->$r->alias_en;
       $title = $str->$r->title_en;
-    }
-    else{
+    } else {
       $header_alias = $str->$r->alias_ja;
       $title = $str->$r->title_ja;
     }
     
     //show info tag only esim_cs, esim_admin and administrator
-    if((in_array('esim_cs', $roles)) || (in_array('esim_admin', $roles)) || (in_array('administrator', $roles))) {
+    if ((in_array('esim_cs', $roles)) || (in_array('esim_admin', $roles)) || (in_array('administrator', $roles))) {
       $info = $str->$r->info_tag;
-    }
-    else{
+    } else {
       $info = false;
     }
 
@@ -189,7 +194,7 @@ class DisplayPreprodTableController2 extends ControllerBase {
       }
 
       //Remove edit option while fetching data form database
-      if ((in_array("Edit", $header_table2)) && (in_array("Delete", $header_table2))) {
+      if((in_array("Edit", $header_table2)) && (in_array("Delete", $header_table2))) {
         $values = array_splice($header_table2,
           0,
           -2
@@ -223,7 +228,7 @@ class DisplayPreprodTableController2 extends ControllerBase {
 
       //Export all data in CSV
       $exportallresults = [];
-      if($exportall==1){ //querystring 1 then execute
+      if($exportalldata == 1) { //querystring 1 then execute
           if ($header_table) {
           $table_sort = $query->extend('Drupal\Core\Database\Query\TableSortExtender')
           ->orderByHeader($header_table);

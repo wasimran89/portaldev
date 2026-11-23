@@ -32,6 +32,7 @@ class Simprofiles extends ResourceBase
     $storage = \Drupal::entityTypeManager()->getStorage('webform_submission');
     $webform_id = 'sim_profile';
     $query = $storage->getQuery()
+      ->accessCheck(FALSE)
       ->condition('webform_id', $webform_id)
       ->execute();    
 

@@ -1,3 +1,0 @@
-wsdata_field.field_wsfield_config_add:
-  class: \Drupal\Core\Menu\LocalActionDefault
-  deriver: \Drupal\wsdata_field\Plugin\Derivative\WSFieldLocalAction

@@ -46,8 +46,9 @@ class DrupalUserDeleteController extends ControllerBase {
     $config = \Drupal::config('xai.settings');
     $base_path = $config->get('domain');
     $ids = \Drupal::entityQuery('user')
-    ->condition('status', 1)
-    ->execute();
+          ->accessCheck(TRUE)
+          ->condition('status', 1)
+          ->execute();
 
     //application user
     $users = User::loadMultiple($ids);
